@@ -1,0 +1,18 @@
+# Spatial relationship dataset configuration
+task: spatial
+
+n_samples: 3000
+seed: 42
+output_dir: data/raw/spatial
+
+canvas:
+  width: 448
+  height: 448
+
+relations:
+  - left_of
+  - right_of
+  - above
+  - below
+
+prompt_template_index: 0

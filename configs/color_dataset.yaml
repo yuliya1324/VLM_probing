@@ -1,0 +1,15 @@
+# Color identification dataset configuration (sanity check)
+task: color
+
+n_samples: 1000
+seed: 123
+output_dir: data/raw/color
+
+canvas:
+  width: 448
+  height: 448
+
+min_shapes: 1
+max_shapes: 3
+
+prompt_template_index: 0
