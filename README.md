@@ -13,6 +13,7 @@ vlm-spatial-probing/
 │   └── color_dataset.yaml
 ├── data/
 │   ├── raw/                    # Generated images
+│        └── vrd                # Dataset - Visual Relationship Detection
 │   ├── processed/              # Extracted features / representations
 │   └── splits/                 # Train/val JSON splits
 ├── src/
@@ -57,3 +58,11 @@ python scripts/generate_dataset.py --config configs/spatial_dataset.yaml
 # Generate color dataset (sanity check, default: 1000 samples)
 python scripts/generate_dataset.py --config configs/color_dataset.yaml
 ```
+
+## Download VRD Dataset
+This project uses the Visual Relationship Detection (VRD) dataset from Kaggle.
+To download it:
+```bash
+kaggle datasets download apoorvshekher/visual-relationship-detection-vrd-dataset
+```
+Then unzip
