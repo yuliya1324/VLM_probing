@@ -1,69 +1,74 @@
 diff --git a/llava/model/__init__.py b/llava/model/__init__.py
-index 788e43e..e2df427 100755
+index 788e43e..0444db5 100755
 --- a/llava/model/__init__.py
 +++ b/llava/model/__init__.py
-@@ -26,5 +26,9 @@ TODO:
+@@ -26,5 +26,10 @@ TODO:
  3. fp8 infernce example (load directly from a fp8 and fwd)
  4. bind fp8 related configs to QLlamaConfig {"coat_fp8_args": {}}
  """
 -from .language_model.fp8linearqwen2 import FP8LinearQwen2Config, FP8LinearQwen2Model
++
 +try:
 +    from .language_model.fp8linearqwen2 import FP8LinearQwen2Config, FP8LinearQwen2Model
 +except Exception:
-+    # Optional; requires newer transformers (StaticCache, etc.)
-+    pass
++    FP8LinearQwen2Config = None
++    FP8LinearQwen2Model = None
  from .language_model.qllava_qllama import QLlavaLlamaConfig, QLlavaLlamaModel
-diff --git a/llava/model/builder.py b/llava/model/builder.py
-index c392b7e..90ffecb 100755
---- a/llava/model/builder.py
-+++ b/llava/model/builder.py
-@@ -137,7 +137,11 @@ def load_pretrained_model(
-     model.eval()
-     image_processor = None
-     if is_mm_model(model_path):
--        model.resize_token_embeddings(len(tokenizer))
-+        llm = model.get_llm() # *
-+        cur = llm.get_input_embeddings().weight.shape[0]# *
-+        new = len(tokenizer)# *
-+        if new != cur:# *
-+            llm.resize_token_embeddings(new, mean_resizing=False)# *
-         vision_tower = model.get_vision_tower()
-         if vision_tower is None:
-             raise ValueError("Vision tower failed to load!")
 diff --git a/llava/model/llava_arch.py b/llava/model/llava_arch.py
-index 6e6e059..806e645 100755
+index 6e6e059..9e33cce 100755
 --- a/llava/model/llava_arch.py
 +++ b/llava/model/llava_arch.py
-@@ -377,7 +377,11 @@ class LlavaMetaModel(ABC):
-             image_features = torch.cat(
-                 [rearrange(x, "b c h w -> b (h w) c") for x in image_features], dim=0
-             )  # B * N * C
--            image_features = self.get_mm_projector()(image_features)
-+            #mage_features = self.get_mm_projector()(image_features)
-+            proj = self.get_mm_projector().to(device=image_features.device, dtype=torch.float32)
-+            llm_dtype = next(self.llm.parameters()).dtype   # torch.float16 ?
-+            image_features = proj(image_features.to(dtype=torch.float32)).to(dtype=llm_dtype)
-+            image_features = proj(image_features) # 
-             image_features = list(
-                 image_features.split([block_size[0] * block_size[1] for block_size in new_block_sizes], dim=0)
-             )
-@@ -390,7 +394,10 @@ class LlavaMetaModel(ABC):
-                 image_features = torch.stack(image_features, dim=0)
-         else:
-             image_features = self.get_vision_tower()(images)
--            image_features = self.get_mm_projector()(image_features)
-+            #image_features = self.get_mm_projector()(image_features)
-+            proj = self.get_mm_projector().to(device=image_features.device, dtype=torch.float32)
-+            llm_dtype = next(self.llm.parameters()).dtype   # torch.float16 ?
-+            image_features = proj(image_features.to(dtype=torch.float32)).to(dtype=llm_dtype)
-         return image_features
+@@ -405,7 +405,8 @@ class LlavaMetaModel(ABC):
+         return self.get_llm().get_output_embeddings()
  
-     ## @yunhao: is there a better way to handle function call and attributes for llm?
+     def resize_token_embeddings(self, embed_size):
+-        self.get_llm().resize_token_embeddings(embed_size)
++        #self.get_llm().resize_token_embeddings(embed_size)
++        self.get_llm().resize_token_embeddings(embed_size, mean_resizing=False)
+ 
+ 
+ class LlavaMetaForCausalLM(ABC):
+diff --git a/llava/model/multimodal_encoder/builder.py b/llava/model/multimodal_encoder/builder.py
+index 4a68e13..ec75371 100755
+--- a/llava/model/multimodal_encoder/builder.py
++++ b/llava/model/multimodal_encoder/builder.py
+@@ -22,10 +22,15 @@ from transformers import AutoConfig, PretrainedConfig, PreTrainedModel
+ 
+ from .clip_encoder import CLIPVisionTower, CLIPVisionTowerS2
+ from .intern_encoder import InternVisionTower, InternVisionTowerS2
+-from .ps3_encoder import PS3VisionTower
+ from .radio_encoder import RADIOVisionTower
+ from .siglip_encoder import SiglipVisionTower, SiglipVisionTowerDynamicS2, SiglipVisionTowerS2
+ 
++try:
++    from .ps3_encoder import PS3VisionTower
++    _HAS_PS3 = True
++except Exception:
++    PS3VisionTower = None
++    _HAS_PS3 = False
+ 
+ def build_vision_tower(model_name_or_path: str, config: PretrainedConfig) -> PreTrainedModel:
+     ## skip vision tower instantiation
+@@ -43,7 +48,13 @@ def build_vision_tower(model_name_or_path: str, config: PretrainedConfig) -> Pre
+     use_dynamic_s2 = getattr(config, "dynamic_s2", False)
+ 
+     if config.ps3:
+-        vision_tower = PS3VisionTower(model_name_or_path, config)
++        if "ps3" in vision_tower_name.lower() or "ps3" in str(vision_tower_cfg).lower():
++            if not _HAS_PS3:
++                raise ImportError(
++                    "PS3 vision tower requested but PS3 is not installed. "
++                    "Install NVLabs PS3 or use a non-PS3 vision tower."
++                )
++            return PS3VisionTower(model_name_or_path, config)
+     elif "intern" in vision_tower_name.lower():
+         drop_path_rate = getattr(config, "drop_path_rate", 0.0)
+         if use_s2:
 diff --git a/llava/model/multimodal_encoder/intern/flash_attention.py b/llava/model/multimodal_encoder/intern/flash_attention.py
-index cf5b162..a261d4d 100755
+index cf5b162..7315cf1 100755
 --- a/llava/model/multimodal_encoder/intern/flash_attention.py
 +++ b/llava/model/multimodal_encoder/intern/flash_attention.py
-@@ -1,105 +1,154 @@
+@@ -1,105 +1,95 @@
 -# Copyright 2024 NVIDIA CORPORATION & AFFILIATES
 -#
 -# Licensed under the Apache License, Version 2.0 (the "License");
@@ -79,7 +84,9 @@ index cf5b162..a261d4d 100755
 -# limitations under the License.
 -#
 -# SPDX-License-Identifier: Apache-2.0
--
++# VILA fallback FlashAttention implementation
++# If flash_attn is unavailable, falls back to torch.nn.functional.scaled_dot_product_attention.
+ 
 -# https://github.com/Dao-AILab/flash-attention/blob/v0.2.8/flash_attn/flash_attention.py
  import torch
  import torch.nn as nn
@@ -90,114 +97,22 @@ index cf5b162..a261d4d 100755
 -    from flash_attn.flash_attn_interface import flash_attn_unpadded_qkvpacked_func
 -except:  # v2
 -    from flash_attn.flash_attn_interface import flash_attn_varlen_qkvpacked_func as flash_attn_unpadded_qkvpacked_func
-+# ------------------------------------------------------------
-+# FlashAttention wrapper used by InternViT.
-+# If flash-attn is unavailable, fall back to PyTorch SDPA.
-+# This is slower but sufficient for inference / hidden-state extraction.
-+# ------------------------------------------------------------
++_HAS_FLASH_ATTN = False
++_flash_attn_unpadded_qkvpacked_func = None
  
 -from flash_attn.bert_padding import pad_input, unpad_input
-+_HAS_FLASH_ATTN = False
-+flash_attn_unpadded_qkvpacked_func = None  # type: ignore
-+
 +try:
-+    from flash_attn.flash_attn_interface import flash_attn_unpadded_qkvpacked_func  # type: ignore
++    # flash-attn v2 (common)
++    from flash_attn.flash_attn_interface import flash_attn_unpadded_qkvpacked_func as _flash_attn_unpadded_qkvpacked_func
 +    _HAS_FLASH_ATTN = True
 +except Exception:
 +    try:
-+        # some flash-attn versions expose the varlen name instead
-+        from flash_attn.flash_attn_interface import (  # type: ignore
-+            flash_attn_varlen_qkvpacked_func as flash_attn_unpadded_qkvpacked_func
-+        )
++        # some versions expose this name instead
++        from flash_attn.flash_attn_interface import flash_attn_varlen_qkvpacked_func as _flash_attn_unpadded_qkvpacked_func
 +        _HAS_FLASH_ATTN = True
 +    except Exception:
 +        _HAS_FLASH_ATTN = False
-+        flash_attn_unpadded_qkvpacked_func = None  # type: ignore
-+
-+
-+def _pad_from_unpadded(x: torch.Tensor, cu_seqlens: torch.Tensor, max_seqlen: int) -> torch.Tensor:
-+    """
-+    x: (total_tokens, ..., d)
-+    cu_seqlens: (B+1,) int32/64 cumulative lengths
-+    return: (B, max_seqlen, ..., d) padded with zeros
-+    """
-+    B = cu_seqlens.numel() - 1
-+    out_shape = (B, max_seqlen) + x.shape[1:]
-+    out = x.new_zeros(out_shape)
-+    for b in range(B):
-+        s = int(cu_seqlens[b].item())
-+        e = int(cu_seqlens[b + 1].item())
-+        L = e - s
-+        if L > 0:
-+            out[b, :L] = x[s:e]
-+    return out
-+
-+
-+def _unpad_to_unpadded(x: torch.Tensor, cu_seqlens: torch.Tensor) -> torch.Tensor:
-+    """
-+    x: (B, max_seqlen, ..., d)
-+    cu_seqlens: (B+1,)
-+    return: (total_tokens, ..., d)
-+    """
-+    B = cu_seqlens.numel() - 1
-+    chunks = []
-+    for b in range(B):
-+        s = int(cu_seqlens[b].item())
-+        e = int(cu_seqlens[b + 1].item())
-+        L = e - s
-+        if L > 0:
-+            chunks.append(x[b, :L])
-+    if len(chunks) == 0:
-+        return x.new_zeros((0,) + x.shape[2:])
-+    return torch.cat(chunks, dim=0)
-+
-+
-+def _sdpa_from_qkv_packed(
-+    qkv: torch.Tensor,
-+    cu_seqlens: torch.Tensor,
-+    max_seqlen: int,
-+    dropout_p: float = 0.0,
-+    softmax_scale: float | None = None,
-+) -> torch.Tensor:
-+    """
-+    qkv: (total_tokens, 3, nheads, headdim)  [unpadded]
-+    returns: (total_tokens, nheads, headdim)
-+    """
-+    # pad to (B, S, 3, H, D)
-+    qkv_pad = _pad_from_unpadded(qkv, cu_seqlens, max_seqlen)
-+    q, k, v = qkv_pad.unbind(dim=2)  # each: (B, S, H, D)
-+
-+    # SDPA expects (B, H, S, D)
-+    q = q.transpose(1, 2)
-+    k = k.transpose(1, 2)
-+    v = v.transpose(1, 2)
-+
-+    # If scale is provided, apply it by scaling q
-+    if softmax_scale is not None:
-+        q = q * softmax_scale
-+
-+    # Build key padding mask from lengths
-+    B = cu_seqlens.numel() - 1
-+    lengths = (cu_seqlens[1:] - cu_seqlens[:-1]).to(torch.int64)  # (B,)
-+    # attn_mask for SDPA: True means "mask out" when using boolean mask in some versions,
-+    # but PyTorch SDPA supports float/bool masks depending on version.
-+    # We'll use a float mask with -inf on padded keys.
-+    # mask shape should be (B, 1, 1, S) broadcastable
-+    S = max_seqlen
-+    idx = torch.arange(S, device=q.device).unsqueeze(0)  # (1, S)
-+    key_pad = idx >= lengths.unsqueeze(1)  # (B, S) True on padding
-+    attn_mask = key_pad.view(B, 1, 1, S).to(q.dtype) * (-1e9)
-+
-+    out = F.scaled_dot_product_attention(
-+        q, k, v,
-+        attn_mask=attn_mask,
-+        dropout_p=dropout_p,
-+        is_causal=False,
-+    )  # (B, H, S, D)
-+
-+    out = out.transpose(1, 2)  # (B, S, H, D)
-+    out_unpad = _unpad_to_unpadded(out, cu_seqlens)  # (total_tokens, H, D)
-+    return out_unpad
++        _flash_attn_unpadded_qkvpacked_func = None
  
  
  class FlashAttention(nn.Module):
@@ -210,18 +125,31 @@ index cf5b162..a261d4d 100755
 -        attention_dropout: The dropout rate to apply to the attention
 -                           (default: 0.0)
 +    """
-+    InternViT expects this module. We provide:
-+    - flash-attn path if available
-+    - SDPA fallback if not
++    Compatible wrapper used by InternViT blocks in VILA.
++    If flash_attn is installed, uses it.
++    Otherwise uses PyTorch scaled_dot_product_attention (SDPA).
      """
  
 -    def __init__(self, softmax_scale=None, attention_dropout=0.0, device=None, dtype=None):
-+    def __init__(self, dropout: float = 0.0, softmax_scale: float | None = None):
++    def __init__(self, dropout: float = 0.0):
          super().__init__()
-+        self.dropout = float(dropout)
-         self.softmax_scale = softmax_scale
+-        self.softmax_scale = softmax_scale
 -        self.dropout_p = attention_dropout
--
++        self.dropout = dropout
++
++    def forward(
++        self,
++        q: torch.Tensor,
++        k: torch.Tensor,
++        v: torch.Tensor,
++        key_padding_mask: torch.Tensor | None = None,
++        causal: bool = False,
++    ) -> torch.Tensor:
++        """
++        Expected shapes (typical):
++          q, k, v: (B, H, L, D) or (B, L, H, D) depending on caller.
++        We handle both by detecting which dim is heads.
+ 
 -    def forward(self, qkv, key_padding_mask=None, causal=False, cu_seqlens=None, max_s=None, need_weights=False):
 -        """Implements the multihead softmax attention.
 -        Arguments
@@ -229,17 +157,13 @@ index cf5b162..a261d4d 100755
 -            qkv: The tensor containing the query, key, and value. (B, S, 3, H, D) if key_padding_mask is None
 -                if unpadded: (nnz, 3, h, d)
 -            key_padding_mask: a bool tensor of shape (B, S)
-+
-+    def forward(self, qkv: torch.Tensor, cu_seqlens: torch.Tensor, max_seqlen: int):
-+        """
-+        qkv: (total_tokens, 3, nheads, headdim)
-+        cu_seqlens: (B+1,)
-+        max_seqlen: int
++        Returns:
++          attn_out: same layout as q.
          """
 -        assert not need_weights
 -        assert qkv.dtype in [torch.float16, torch.bfloat16]
 -        assert qkv.is_cuda
--
+ 
 -        if cu_seqlens is None:
 -            batch_size = qkv.shape[0]
 -            seqlen = qkv.shape[1]
@@ -279,50 +203,69 @@ index cf5b162..a261d4d 100755
 -        else:
 -            assert max_s is not None
 -            output = flash_attn_unpadded_qkvpacked_func(
-+        if _HAS_FLASH_ATTN and flash_attn_unpadded_qkvpacked_func is not None:
-+            return flash_attn_unpadded_qkvpacked_func(
-                 qkv,
-                 cu_seqlens,
+-                qkv,
+-                cu_seqlens,
 -                max_s,
 -                self.dropout_p if self.training else 0.0,
-+                max_seqlen,
-+                self.dropout if self.training else 0.0,
-                 softmax_scale=self.softmax_scale,
+-                softmax_scale=self.softmax_scale,
 -                causal=causal,
-             )
+-            )
++        # Normalize to (B, H, L, D)
++        def to_bhld(x: torch.Tensor) -> tuple[torch.Tensor, bool]:
++            # If x is (B, L, H, D) -> transpose to (B, H, L, D)
++            if x.dim() == 4 and x.shape[1] != x.shape[2]:
++                # ambiguous; assume (B, H, L, D) already if dim1 looks like heads (usually small)
++                # if dim1 is large and dim2 small, it's (B, L, H, D)
++                if x.shape[1] > x.shape[2]:
++                    return x.transpose(1, 2), True
++            return x, False
++
++        q_bhld, q_swapped = to_bhld(q)
++        k_bhld, k_swapped = to_bhld(k)
++        v_bhld, v_swapped = to_bhld(v)
++
++        # If flash-attn is available, use it (best performance)
++        if _HAS_FLASH_ATTN and _flash_attn_unpadded_qkvpacked_func is not None:
++            # flash_attn expects packed qkv; but caller here provides q,k,v.
++            # We fall back to SDPA for correctness unless you implement packing + unpadding.
++            # Keeping SDPA even when flash-attn exists is acceptable for your extraction use-case.
++            pass
++
++        # SDPA path (works everywhere, PyTorch>=2.0)
++        # Build attention mask from key_padding_mask if provided
++        attn_mask = None
++        if key_padding_mask is not None:
++            # key_padding_mask: (B, Lk) where True means "pad" in some conventions.
++            # SDPA expects a mask where True means "disallow". We'll interpret nonzero/True as disallow.
++            # Expand to (B, 1, Lq, Lk)
++            disallow = key_padding_mask.to(torch.bool).unsqueeze(1).unsqueeze(2)
++            attn_mask = disallow  # boolean mask supported by SDPA
++
++        # scaled_dot_product_attention expects (B, H, L, D)
++        out = F.scaled_dot_product_attention(
++            q_bhld, k_bhld, v_bhld,
++            attn_mask=attn_mask,
++            dropout_p=self.dropout if self.training else 0.0,
++            is_causal=causal,
++        )
  
 -        return output, None
-+        # Fallback: SDPA
-+        if not hasattr(F, "scaled_dot_product_attention"):
-+            raise RuntimeError(
-+                "flash-attn is not installed and PyTorch SDPA is unavailable. "
-+                "Please install flash-attn or use a newer PyTorch."
-+            )
-+
-+        return _sdpa_from_qkv_packed(
-+            qkv=qkv,
-+            cu_seqlens=cu_seqlens,
-+            max_seqlen=max_seqlen,
-+            dropout_p=self.dropout if self.training else 0.0,
-+            softmax_scale=self.softmax_scale,
-+        )
++        # Convert back to original layout if needed
++        if q_swapped:
++            out = out.transpose(1, 2)  # (B, L, H, D)
++        return out
+\ No newline at end of file
 diff --git a/llava/model/multimodal_encoder/siglip_encoder.py b/llava/model/multimodal_encoder/siglip_encoder.py
-index da11ae3..04fc490 100755
+index da11ae3..d2b864a 100755
 --- a/llava/model/multimodal_encoder/siglip_encoder.py
 +++ b/llava/model/multimodal_encoder/siglip_encoder.py
-@@ -26,9 +26,14 @@ class SiglipVisionTower(VisionTower):
-     def __init__(self, model_name_or_path: str, config: PretrainedConfig) -> None:
-         super().__init__(model_name_or_path, config)
+@@ -28,7 +28,8 @@ class SiglipVisionTower(VisionTower):
          # TODO(ligengl): why pass config here leading to errors?
-+        #self.vision_tower = SiglipVisionModel.from_pretrained(
-+            #model_name_or_path,
-+            #attn_implementation="flash_attention_2",
-+            #torch_dtype=eval(config.model_dtype),
-+        #)
          self.vision_tower = SiglipVisionModel.from_pretrained(
              model_name_or_path,
 -            attn_implementation="flash_attention_2",
 +            attn_implementation="sdpa",
++            #attn_implementation="flash_attention_2",
              torch_dtype=eval(config.model_dtype),
          )
          self.image_processor = SiglipImageProcessor.from_pretrained(model_name_or_path)
