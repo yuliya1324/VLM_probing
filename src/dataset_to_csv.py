@@ -33,7 +33,7 @@ def _obj_name(ex, obj_idx: int) -> str:
 # --------------------------------------------------
 # Main CSV creation
 # --------------------------------------------------
-def build_relationship_csv():
+def build_relationship_csv(rep=None):
     if not ANN_PATH.exists():
         raise FileNotFoundError(ANN_PATH)
     if not IMG_DIR.exists():
@@ -58,6 +58,12 @@ def build_relationship_csv():
             subj = _obj_name(ex, si)
             obj  = _obj_name(ex, oi)
             rel  = r.get("relationship", "")
+            
+            # -------------------------------
+            # relationship filtering
+            # -------------------------------
+            if rep is not None and rel not in rep:
+                continue
 
             rows.append({
                 "img_path": str(img_path),
@@ -84,4 +90,13 @@ def build_relationship_csv():
 
 
 if __name__ == "__main__":
-    build_relationship_csv()
+    rep = [
+        "right of",
+        "left of",
+        "below",
+        "above",
+        "in front of",
+        "behind",
+    ]
+
+    build_relationship_csv(rep=rep)

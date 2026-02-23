@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from pathlib import Path
+import csv
 import re
-from typing import Union, Iterable, Dict
+from typing import Union, Dict, Any, Optional
 
 import torch
 from PIL import Image
@@ -27,49 +28,59 @@ def build_prompt(obj1: str, obj2: str) -> str:
 
 
 def _safe(s: str) -> str:
-    s = s.strip().lower()
+    s = str(s).strip().lower()
     s = re.sub(r"\s+", "_", s)
     s = re.sub(r"[^a-zA-Z0-9_\-\.]+", "", s)
     return s[:80] if len(s) > 80 else s
 
 
-def extract_qwen2vl_lasttoken_layers_from_ex(
-    ex: dict,
-    save_dir: Union[str, Path],
-    model_id: str = "Qwen/Qwen2-VL-7B-Instruct",
-    selected_layers: Iterable[int] = (4, 12, 20, 28, 32),
-    prompt_builder=build_prompt,
-) -> Path:
+# =========================
+# Model loading (ONCE)
+# =========================
+def load_qwen2vl(model_id: str):
     """
-    ex: {"img_path": Path/str, "subj": str, "obj": str, "rel": str (optional)}
-    Saves: <image_stem>__<subj>__<obj>.pt
-
-    Extracts: last-token hidden state at selected transformer layers.
+    Load model + processor ONCE.
+    Note: device_map="auto" may shard across devices.
     """
-
-    # --- fixed fields from ex ---
-    img_path = Path(ex["img_path"])
-    obj1 = ex["subj"]
-    obj2 = ex["obj"]
-
-    # --- prep IO ---
-    save_dir = Path(save_dir)
-    save_dir.mkdir(parents=True, exist_ok=True)
-
-    # --- load model + processor ---
     model = Qwen2VLForConditionalGeneration.from_pretrained(
         model_id,
         device_map="auto",
         torch_dtype="auto",
     )
     model.eval()
-
     processor = AutoProcessor.from_pretrained(model_id)
+    return model, processor
 
-    # --- build messages (Qwen2-VL chat format) ---
+
+# =========================
+# Single example extraction (REUSE model/processor)
+# =========================
+@torch.no_grad()
+def extract_qwen2vl_lasttoken_layers_from_ex(
+    ex: Dict[str, Any],
+    save_dir: Union[str, Path],
+    model,
+    processor,
+    model_id: str,
+    prompt_builder=build_prompt,
+) -> Path:
+    """
+    ex: {"img_path": Path/str, "subj": str, "obj": str, "relationship": str} (or "rel")
+    Saves: <image_stem>__<subj>__<obj>.pt
+    Extracts: last-token hidden state for ALL layers (embeddings + each layer).
+    """
+
+    img_path = Path(ex["img_path"])
+    obj1 = ex["subj"]
+    obj2 = ex["obj"]
+    rel = ex.get("rel", ex.get("relationship", None))
+
+    save_dir = Path(save_dir)
+    save_dir.mkdir(parents=True, exist_ok=True)
+
     prompt = prompt_builder(obj1, obj2)
-    # NOTE: Qwen2-VL expects messages, not raw "<image>" token in text;
-    # we still keep 'prompt' in meta for spec consistency.
+
+    # Qwen2-VL: messages format
     messages = [
         {
             "role": "user",
@@ -80,11 +91,11 @@ def extract_qwen2vl_lasttoken_layers_from_ex(
         }
     ]
 
-    # --- make text via chat template, then tokenize with image ---
+    # Convert messages to text with chat template
     text = processor.apply_chat_template(
         messages,
         add_generation_prompt=True,
-        tokenize=False,  # important: we will call processor(...) to attach image tensors
+        tokenize=False,
     )
 
     image = Image.open(img_path).convert("RGB")
@@ -94,8 +105,9 @@ def extract_qwen2vl_lasttoken_layers_from_ex(
         return_tensors="pt",
     )
 
-    # --- move tensors to model's main device (safe with device_map="auto") ---
-    # Prefer the device of input embeddings weight if available.
+    # With device_map="auto", best effort: put inputs on embedding device
+    # (works for many setups; if your model is heavily sharded, keeping inputs on cpu may be safer,
+    # but this usually works for Qwen2-VL on a single GPU.)
     try:
         target_device = model.get_input_embeddings().weight.device
     except Exception:
@@ -103,24 +115,15 @@ def extract_qwen2vl_lasttoken_layers_from_ex(
 
     inputs = {k: (v.to(target_device) if torch.is_tensor(v) else v) for k, v in inputs.items()}
 
-    # --- forward + extract ---
-    with torch.no_grad():
-        out = model(
-            **inputs,
-            output_hidden_states=True,
-            return_dict=True,
-            use_cache=False,
-        )
+    out = model(
+        **inputs,
+        output_hidden_states=True,
+        return_dict=True,
+        use_cache=False,
+    )
 
-    hs = out.hidden_states  # tuple: (embeddings + each layer)
-    max_layer = len(hs) - 1
-
-    layers: Dict[int, torch.Tensor] = {}
-    for l in selected_layers:
-        l = int(l)
-        if not (0 <= l <= max_layer):
-            raise ValueError(f"selected_layers contains {l}, but hidden_states has layers 0..{max_layer}")
-        layers[l] = hs[l][0, -1].detach().cpu()
+    hs = out.hidden_states
+    layers = {l: hs[l][0, -1].detach().cpu() for l in range(len(hs))}
 
     fname = f"{img_path.stem}__{_safe(obj1)}__{_safe(obj2)}.pt"
     save_path = save_dir / fname
@@ -131,9 +134,8 @@ def extract_qwen2vl_lasttoken_layers_from_ex(
             "img_path": str(img_path),
             "obj1": obj1,
             "obj2": obj2,
-            "rel": ex.get("rel", None),
+            "rel": rel,
             "prompt": prompt,
-            "selected_layers": list(map(int, selected_layers)),
             "model_id": model_id,
         },
     }
@@ -141,18 +143,109 @@ def extract_qwen2vl_lasttoken_layers_from_ex(
     return save_path
 
 
-if __name__ == "__main__":
-    ex = {
-        "img_path": "/Data/masayo.tomita/VLM_probing/data/raw/vrd/sg_train_images/9561419764_c12dc30e76_b.jpg",
-        "subj": "the wall",
-        "obj": "people",
-        "rel": "in front of",
-    }
+# =========================
+# CSV runner (same as LLaVA style)
+# =========================
+def iter_relationships_csv(csv_path: Union[str, Path]):
+    """
+    CSV header is handled by DictReader.
+    Expected columns: img_path, subj, obj, relationship
+    """
+    csv_path = Path(csv_path)
+    with csv_path.open("r", newline="") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            if not row:
+                continue
+            yield {
+                "img_path": (row.get("img_path") or "").strip(),
+                "subj": (row.get("subj") or "").strip(),
+                "obj": (row.get("obj") or "").strip(),
+                "relationship": (row.get("relationship") or "").strip(),
+            }
 
-    save_path = extract_qwen2vl_lasttoken_layers_from_ex(
-        ex,
-        save_dir="/Data/masayo.tomita/VLM_probing/features/Qwen2-VL",
+
+def run_csv(
+    csv_path: Union[str, Path],
+    save_dir: Union[str, Path],
+    model_id: str = "Qwen/Qwen2-VL-7B-Instruct",
+    limit: Optional[int] = None,   # None => all rows
+    skip_existing: bool = True,
+):
+    """
+    Iterate CSV and save features.
+    - limit=10 => head(10)
+    - limit=None => all rows
+    """
+
+    model, processor = load_qwen2vl(model_id)
+
+    ok = 0
+    skipped = 0
+    errored = 0
+
+    for i, ex in enumerate(iter_relationships_csv(csv_path), start=1):
+        if limit is not None and i > limit:
+            break
+
+        if not ex["img_path"] or not ex["subj"] or not ex["obj"]:
+            #print(f"[skip] row {i}: missing fields -> {ex}")
+            skipped += 1
+            continue
+
+        img_path = Path(ex["img_path"])
+        if not img_path.exists():
+            #print(f"[skip] row {i}: image not found -> {img_path}")
+            skipped += 1
+            continue
+
+        fname = f"{img_path.stem}__{_safe(ex['subj'])}__{_safe(ex['obj'])}.pt"
+        save_path = Path(save_dir) / fname
+        if skip_existing and save_path.exists():
+            #print(f"[skip] row {i}: exists -> {save_path}")
+            skipped += 1
+            continue
+
+        try:
+            out_path = extract_qwen2vl_lasttoken_layers_from_ex(
+                ex=ex,
+                save_dir=save_dir,
+                model=model,
+                processor=processor,
+                model_id=model_id,
+            )
+            #print(f"[ok] row {i} saved: {out_path}")
+            ok += 1
+        except torch.cuda.OutOfMemoryError as e:
+            # robust mode for full CSV runs
+            print(f"[oom] row {i}: {e} -> clearing cache and continuing")
+            try:
+                torch.cuda.empty_cache()
+            except Exception:
+                pass
+            errored += 1
+        except Exception as e:
+            print(f"[error] row {i}: {e}")
+            errored += 1
+
+    #print(f"done. ok={ok} skipped={skipped} errored={errored}")
+    # ---- final summary ----
+    with csv_path.open("r") as f:
+        total_rows = sum(1 for _ in f) - 1  # exclude header
+
+    n_report = total_rows if limit is None else min(limit, total_rows)
+
+    print(f"Successfully saved {n_report} hidden states under {save_dir}!")
+
+if __name__ == "__main__":
+    PROJECT_ROOT = Path(__file__).resolve().parents[2]
+    csv_path = PROJECT_ROOT / "data" / "vrd_relationships.csv"
+    save_dir = PROJECT_ROOT / "features" / "Qwen2-VL"
+
+    run_csv(
+        csv_path=csv_path,
+        save_dir=save_dir,
         model_id="Qwen/Qwen2-VL-7B-Instruct",
-        selected_layers=(4, 12, 20, 28),
+        limit=10,          # None => all rows
+        skip_existing=True,
     )
-    print("saved:", save_path)

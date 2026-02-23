@@ -10,6 +10,8 @@ build/
 venv/
 .venv/
 env/
+venv-extract/
+.venv-extract/
 
 # IDE
 .vscode/
@@ -22,6 +24,7 @@ env/
 Thumbs.db
 
 # Generated data (re-generate with scripts/)
+data/
 data/raw/
 data/processed/
 data/splits/
@@ -40,3 +43,9 @@ notebooks/*.ipynb
 *.pth
 *.safetensors
 *.npz
+
+# Model outputs
+features/
+
+# external model repo (patched locally)
+VILA/

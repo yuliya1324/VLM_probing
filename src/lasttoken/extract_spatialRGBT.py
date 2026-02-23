@@ -3,15 +3,35 @@ from __future__ import annotations
 from pathlib import Path
 import csv
 import re
-from typing import Union, Dict, Any, Optional, Tuple
+import sys
+import inspect
+from typing import Union, Dict, Any, Optional
 
 import torch
-from transformers import LlavaForConditionalGeneration, LlavaProcessor, BitsAndBytesConfig
 from PIL import Image
+import os
+
+import sys
+try:
+    import psutil as ps3
+    sys.modules["ps3"] = ps3
+except Exception:
+    pass
+
+# =========================
+# import path (VILA)
+# =========================
+REPO_ROOT = Path(__file__).resolve().parents[2]  # src/lasttoken -> src -> VLM_probing
+VILA_ROOT = REPO_ROOT / "VILA"
+sys.path.insert(0, str(VILA_ROOT))
+
+from llava.model.builder import load_pretrained_model
+from llava.mm_utils import tokenizer_image_token
+from llava.constants import DEFAULT_IMAGE_TOKEN
 
 
 # =========================
-# Prompt
+# prompt
 # =========================
 LLaVA_SPATIAL_PROMPT = (
     "Determine the spatial relationship of '{obj1}' relative to '{obj2}'.\n"
@@ -19,7 +39,6 @@ LLaVA_SPATIAL_PROMPT = (
     "[left of, right of, above, below, in front of, behind]\n"
     "Respond with ONLY the label. No explanation."
 )
-
 LLaVA_CHAT_WRAPPER = "USER: <image>\n{instruction}\nASSISTANT:"
 
 
@@ -36,45 +55,40 @@ def _safe(s: str) -> str:
 
 
 # =========================
-# Model loading (ONCE)
+# load model (once)
 # =========================
-def load_llava_4bit(model_id: str):
-    bnb = BitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_compute_dtype=torch.float16,
-        bnb_4bit_use_double_quant=True,
-        bnb_4bit_quant_type="nf4",
-    )
+import os
 
-    model = LlavaForConditionalGeneration.from_pretrained(
-        model_id,
-        quantization_config=bnb,
+def load_specialrgbt(model_id: str):
+    # Force-disable FlashAttention2 in Transformers
+    os.environ["FLASH_ATTENTION_2"] = "0"
+    os.environ["TRANSFORMERS_ATTENTION_IMPLEMENTATION"] = "sdpa"  # or "eager"
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    tokenizer, model, image_processor, context_len = load_pretrained_model(
+        model_path=model_id,
+        model_name=model_id,
+        model_base=None,
+        device=device,
         device_map="auto",
-        low_cpu_mem_usage=True,
     )
     model.eval()
-
-    processor = LlavaProcessor.from_pretrained(model_id)
-    return model, processor
-
+    return device, tokenizer, model, image_processor
 
 # =========================
-# Single example extraction
+# single example
 # =========================
 @torch.no_grad()
-def extract_llava_lasttoken_layers_from_ex(
+def extract_specialrgbt_lasttoken_layers_from_ex(
     ex: Dict[str, Any],
     save_dir: Union[str, Path],
+    device: str,
+    tokenizer,
     model,
-    processor,
+    image_processor,
     model_id: str,
     prompt_builder=build_prompt,
 ) -> Path:
-    """
-    ex: {"img_path": Path/str, "subj": str, "obj": str, "relationship": str}  (or "rel")
-    Saves: <image_stem>__<subj>__<obj>.pt
-    """
-
     img_path = Path(ex["img_path"])
     obj1 = ex["subj"]
     obj2 = ex["obj"]
@@ -83,22 +97,55 @@ def extract_llava_lasttoken_layers_from_ex(
     save_dir = Path(save_dir)
     save_dir.mkdir(parents=True, exist_ok=True)
 
-    image = Image.open(img_path).convert("RGB")
+    img = Image.open(img_path).convert("RGB")
+    img_t = image_processor(img, return_tensors="pt")["pixel_values"][0].to(device)
+    media = {"image": [img_t]}
+    media_config = {"image": {}}
+
     prompt = prompt_builder(obj1, obj2)
-    inputs = processor(text=prompt, images=image, return_tensors="pt")
 
-    device = model.get_input_embeddings().weight.device
-    inputs = {k: (v.to(device) if torch.is_tensor(v) else v) for k, v in inputs.items()}
+    image_token_id = tokenizer.convert_tokens_to_ids(DEFAULT_IMAGE_TOKEN)
+    assert isinstance(image_token_id, int) and image_token_id >= 0
 
-    out = model(
-        **inputs,
+    sig = inspect.signature(tokenizer_image_token)
+    param_names = list(sig.parameters.keys())
+
+    args = [prompt, tokenizer]
+    kwargs = {}
+    if "return_tensors" in sig.parameters:
+        kwargs["return_tensors"] = "pt"
+
+    for name in ("image_token_index", "image_token", "image_token_id"):
+        if name in sig.parameters:
+            pos = param_names.index(name)
+            while len(args) < pos:
+                args.append(None)
+            args.append(image_token_id)
+            break
+
+    input_ids = tokenizer_image_token(*args, **kwargs)
+    if input_ids.dim() == 1:
+        input_ids = input_ids.unsqueeze(0)
+    input_ids = input_ids.to(device)
+
+    attention_mask = torch.ones_like(input_ids, device=device)
+
+    inputs_embeds, _, attention_mask = model._embed(
+        input_ids=input_ids,
+        media=media,
+        media_config=media_config,
+        labels=None,
+        attention_mask=attention_mask,
+    )
+
+    out = model.llm.model(
+        inputs_embeds=inputs_embeds,
+        attention_mask=attention_mask,
         output_hidden_states=True,
-        output_attentions=False,
-        use_cache=False,
         return_dict=True,
     )
 
-    hs = out.hidden_states  # tuple: (embeddings + each layer)
+    hs = out.hidden_states
     layers = {l: hs[l][0, -1].detach().cpu() for l in range(len(hs))}
 
     fname = f"{img_path.stem}__{_safe(obj1)}__{_safe(obj2)}.pt"
@@ -120,7 +167,7 @@ def extract_llava_lasttoken_layers_from_ex(
 
 
 # =========================
-# CSV runner
+# CSV
 # =========================
 def iter_relationships_csv(csv_path: Union[str, Path]):
     csv_path = Path(csv_path)
@@ -140,17 +187,15 @@ def iter_relationships_csv(csv_path: Union[str, Path]):
 def run_csv(
     csv_path: Union[str, Path],
     save_dir: Union[str, Path],
-    model_id: str = "llava-hf/llava-1.5-7b-hf",
-    limit: Optional[int] = None,
+    model_id: str = "a8cheng/SpatialRGPT-VILA1.5-8B",
+    limit: Optional[int] = 10,          # set None for all rows
     skip_existing: bool = True,
 ):
-    """
-    Iterate CSV and save features.
-    - limit=10 => head(10)
-    - limit=None => all rows
-    """
-    
-    model, processor = load_llava_4bit(model_id)
+    csv_path = Path(csv_path)
+    save_dir = Path(save_dir)
+    save_dir.mkdir(parents=True, exist_ok=True)
+
+    device, tokenizer, model, image_processor = load_specialrgbt(model_id)
 
     ok = 0
     skipped = 0
@@ -160,59 +205,64 @@ def run_csv(
         if limit is not None and i > limit:
             break
 
-        # validation
         if not ex["img_path"] or not ex["subj"] or not ex["obj"]:
-            #print(f"[skip] row {i}: missing fields -> {ex}")
             skipped += 1
             continue
 
         img_path = Path(ex["img_path"])
         if not img_path.exists():
-            #print(f"[skip] row {i}: image not found -> {img_path}")
             skipped += 1
             continue
 
         fname = f"{img_path.stem}__{_safe(ex['subj'])}__{_safe(ex['obj'])}.pt"
-        save_path = Path(save_dir) / fname
-        if skip_existing and save_path.exists():
-            #print(f"[skip] row {i}: exists -> {save_path}")
+        out_path = save_dir / fname
+        if skip_existing and out_path.exists():
             skipped += 1
             continue
 
         try:
-            out_path = extract_llava_lasttoken_layers_from_ex(
+            extract_specialrgbt_lasttoken_layers_from_ex(
                 ex=ex,
                 save_dir=save_dir,
+                device=device,
+                tokenizer=tokenizer,
                 model=model,
-                processor=processor,
+                image_processor=image_processor,
                 model_id=model_id,
             )
-            #print(f"[ok] row {i} saved: {out_path}")
             ok += 1
+        except torch.cuda.OutOfMemoryError as e:
+            #print(f"[oom] row {i}: {e}")
+            try:
+                torch.cuda.empty_cache()
+            except Exception:
+                pass
+            errored += 1
         except Exception as e:
-            print(f"[error] row {i}: {e}")
+            #print(f"[error] row {i}: {e}")
             errored += 1
 
-    # ---- final summary ----
     with csv_path.open("r") as f:
         total_rows = sum(1 for _ in f) - 1  # exclude header
-
+        
     n_report = total_rows if limit is None else min(limit, total_rows)
 
     print(f"Successfully saved {n_report} hidden states under {save_dir}!")
+    #print(f"(ok={ok}, skipped={skipped}, errored={errored})")
+
 
 # =========================
-# CLI-ish usage
+# main
 # =========================
 if __name__ == "__main__":
     PROJECT_ROOT = Path(__file__).resolve().parents[2]
     csv_path = PROJECT_ROOT / "data" / "vrd_relationships.csv"
-    save_dir = PROJECT_ROOT / "features" / "LLaVA"
+    save_dir = PROJECT_ROOT / "features" / "SpecialRGBT"
 
     run_csv(
         csv_path=csv_path,
         save_dir=save_dir,
-        model_id="llava-hf/llava-1.5-7b-hf",
-        limit=10,          # None => all rows
+        model_id="a8cheng/SpatialRGPT-VILA1.5-8B",
+        limit=10,           # None => all rows
         skip_existing=True,
     )
