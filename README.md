@@ -66,3 +66,15 @@ To download it:
 kaggle datasets download apoorvshekher/visual-relationship-detection-vrd-dataset
 ```
 Then unzip
+
+## Create CSV from VRD Dataset
+We convert the Visual Relationship Detection (VRD) annotations into a flat CSV file used for probing Vision-Language Models.
+Run:
+```bash
+python src/dataset_to_csv.py
+```
+Output:
+`~/data/vrd_relationships.csv`
+Notes
+- Only samples with existing images are included.
+- One image may produce multiple rows (one per relationship).
