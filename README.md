@@ -114,3 +114,10 @@ git submodule update --init --recursive
 python -m pip install -e ./VILA --no-deps
 git apply patches/vila_local.patch
 ```
+
+## Extract Hidden States
+
+```bash
+python src/lasttoken/extract_{llava15, qwen2, spatialRGBT}.py
+```
+⚠️ Make sure you are on `venv-extract`
