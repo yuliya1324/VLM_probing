@@ -106,3 +106,11 @@ Output:
 Notes
 - Only samples with existing images are included.
 - One image may produce multiple rows (one per relationship).
+
+## Model Setup (SpacialRGBT)
+
+```bash
+git submodule update --init --recursive
+python -m pip install -e ./VILA --no-deps
+git apply patches/vila_local.patch
+```
