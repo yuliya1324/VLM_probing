@@ -47,11 +47,39 @@ vlm-spatial-probing/
    - One-vs-rest logistic regression with L2 regularization
    - Trained per-layer on 80/20 train/val split
 
-## Quick Start
+# Quick Start
+
+## Environment Usage
+
+This project uses TWO environments depending on the task.
+
+### Default environment (development)
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+### Extract (hidden states, Python 3.11)
+We use Python 3.11 for extraction (cluster default is 3.9).
+
+Reason:
+Some models require Python 3.11 + specific CUDA/bitsandbytes versions.
 
 ```bash
-pip install -r requirements.txt
+uv venv -p 3.11 .venv-extract
+source .venv-extract/bin/activate
+pip install -r requirements-extract.txt
+```
+Run:
+```bash
+./scripts/run_extract.sh
+```
 
+⚠️ Do NOT run extraction scripts inside venv.
+
+## Generate dataset
+
+```bash
 # Generate spatial dataset (default: 3000 samples)
 python scripts/generate_dataset.py --config configs/spatial_dataset.yaml
 
