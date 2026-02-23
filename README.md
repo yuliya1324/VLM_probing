@@ -55,8 +55,8 @@ This project uses TWO environments depending on the task.
 
 ### Default environment (development)
 ```bash
-python -m venv .venv
-source .venv/bin/activate
+python -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 ### Extract (hidden states, Python 3.11)
@@ -66,8 +66,8 @@ Reason:
 Some models require Python 3.11 + specific CUDA/bitsandbytes versions.
 
 ```bash
-uv venv -p 3.11 .venv-extract
-source .venv-extract/bin/activate
+uv venv -p 3.11 venv-extract
+source venv-extract/bin/activate
 pip install -r requirements-extract.txt
 ```
 Run:
