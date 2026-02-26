@@ -14,7 +14,6 @@ vlm-spatial-probing/
 ├── data/
 │   ├── raw/                    # Generated images
 │        └── vrd                # Dataset - Visual Relationship Detection
-│   ├── processed/              # Extracted features / representations
 │   └── splits/                 # Train/val JSON splits
 ├── src/
 │   ├── dataset_generation/     # Synthetic image + label generation
@@ -22,11 +21,13 @@ vlm-spatial-probing/
 │   │   ├── color.py            # Color identification dataset (sanity check)
 │   │   ├── renderer.py         # Shape rendering engine
 │   │   └── schema.py           # Data schemas / types
-│   └── probing/                # Hidden state extraction from VLMs & Linear probe training & evaluation
-│       ├── probe.py
-│       └── extractor.py
+│   ├── extraction/             # Hidden state extraction from VLMs
+│       └── extract.py
+│   └── probing/                # Linear probe training & evaluation
+│       └── probe.py
 ├── scripts/                    # Entry-point scripts
-│   └── generate_dataset.py
+│   ├── extract_and_probe.py    # Script for the whole pipeline extract & probe
+│   └── generate_dataset.py     # Script for generating the dataset
 ├── notebooks/                  # Exploratory notebooks
 ├── results/                    # Saved probe results, plots
 ├── requirements.txt
@@ -68,7 +69,11 @@ Some models require Python 3.11 + specific CUDA/bitsandbytes versions.
 ```bash
 uv venv -p 3.11 venv-extract
 source venv-extract/bin/activate
-pip install -r requirements-extract.txt
+python -m ensurepip
+python -m pip install --upgrade pip
+python -m pip install -r requirements-extract.txt --no-deps
+python -m pip install -e "git+https://github.com/NVlabs/VILA.git@b760c34b9487fd736b4075f5111fbef3d80a37e9#egg=vila" --no-deps
+# pip install -r requirements-extract.txt
 ```
 Run:
 ```bash
