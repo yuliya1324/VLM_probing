@@ -40,11 +40,11 @@ vlm-spatial-probing/
    - Spatial relations: images of geometric shapes with ground-truth relations
    - Color identification: simpler task as a sanity check for the probing pipeline
 
-2. **Extract hidden representations** (`scripts/extract_representations.py`)
+2. **Extract hidden representations** (`src/extraction/extract.py`)
    - Feed each image + prompt into a VLM
    - Save residual stream activations from all layers at the last prompt token
 
-3. **Train linear probes** (`scripts/train_probes.py`)
+3. **Train linear probes** (`src/probing/probe.py`)
    - One-vs-rest logistic regression with L2 regularization
    - Trained per-layer on 80/20 train/val split
 
@@ -126,3 +126,16 @@ git apply patches/vila_local.patch
 python src/lasttoken/extract_{llava15, qwen2, spatialRGBT}.py
 ```
 ⚠️ Make sure you are on `venv-extract`
+
+## Extract Hiddens and Train the Probes
+
+```bash
+python scripts/extract_and_probe.py \
+    --task=spatial \
+    --data_dir=data/raw/spatial \
+    --model_tag=llava15 \ # Choose between llava15 and qwen2
+    --output_dir=path_to_the_output_dir \
+    --train_split_path=path_to_the_train_split_json \ # optional
+    --val_split_path=path_to_the_val_split_json \ # optional
+    --skip_extraction # Skip extraction, use existing .npz (for re-running probes only)
+```
