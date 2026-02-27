@@ -68,6 +68,8 @@ def main():
                         help="Max samples to extract (None = all)")
     parser.add_argument("--skip_extraction", action="store_true",
                         help="Skip extraction, use existing .npz (for re-running probes only)")
+    parser.add_argument("--random_prompt", action="store_true",
+                        help="To use random prompt")
 
     # Probe hyperparameters
     parser.add_argument("--C", type=float, default=1.0,
@@ -97,6 +99,7 @@ def main():
             model_id=args.model_id,
             task=args.task,
             limit=args.limit,
+            random_prompt=args.random_prompt,
         )
     else:
         if not Path(npz_path).exists():

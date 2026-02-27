@@ -29,6 +29,49 @@ import torch
 from PIL import Image
 
 
+# ============================================================
+# Prompt templates
+# ============================================================
+
+PROMPT_TEMPLATES = [
+    "The spatial relationship of {subj} to {obj} is",
+    "Considering the image, the {subj} is positioned ___ the {obj}. The answer is",
+    "Where is the {subj} relative to the {obj}? The {subj} is",
+]
+
+SPATIAL_PROMPT = (
+    "Determine the spatial relationship of '{subj}' relative to '{obj}'.\n"
+    "Choose ONE label from:\n"
+    "[left of, right of, above, below]\n"
+    "Respond with ONLY the label. No explanation."
+)
+
+COLOR_PROMPT = (
+    "What is the color of the {subj} in the image?\n"
+    "Respond with ONLY the color name. No explanation."
+)
+
+PROMPT_TEMPLATES = {
+    "spatial": SPATIAL_PROMPT,
+    "color": COLOR_PROMPT,
+}
+
+
+def build_prompt(sample: dict, task: str) -> str:
+    """Build a prompt string from a metadata sample."""
+    template = PROMPT_TEMPLATES[task]
+
+    if task == "spatial":
+        subj = f"{sample['subject_color']} {sample['subject_shape']}"
+        obj = f"{sample['reference_color']} {sample['reference_shape']}"
+        return template.format(subj=subj, obj=obj)
+    elif task == "color":
+        subj = sample["shape_type"]
+        return template.format(subj=subj)
+    else:
+        raise ValueError(f"Unknown task: {task}")
+
+
 def get_label(sample: dict, task: str) -> str:
     """Extract the ground-truth label from a metadata sample."""
     if task == "spatial":
@@ -65,6 +108,32 @@ def load_llava(model_id: str):
     return model, processor
 
 
+def load_vila(model_id: str):
+    """Load VILA / SpatialRGPT model using VILA's custom builder.
+
+    Requires VILA to be installed: pip install -e ./VILA --no-deps
+    Returns (model, (device, tokenizer, image_processor)) — note the
+    different return shape, handled by the VILA-specific extract path.
+    """
+    import os
+    os.environ["FLASH_ATTENTION_2"] = "0"
+    os.environ["TRANSFORMERS_ATTENTION_IMPLEMENTATION"] = "sdpa"
+
+    from llava.model.builder import load_pretrained_model
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    tokenizer, model, image_processor, context_len = load_pretrained_model(
+        model_path=model_id,
+        model_name=model_id,
+        model_base=None,
+        device=device,
+        device_map="auto",
+    )
+    model.eval()
+    # Pack extras into processor slot for registry compatibility
+    return model, (device, tokenizer, image_processor)
+
+
 # Maps a short tag → (loader_fn, input_builder_fn)
 # input_builder_fn: (processor, prompt, image) → dict of model inputs
 MODEL_REGISTRY: Dict[str, Dict[str, Any]] = {
@@ -75,6 +144,10 @@ MODEL_REGISTRY: Dict[str, Dict[str, Any]] = {
     "llava15": {
         "loader": load_llava,
         "default_id": "llava-hf/llava-1.5-7b-hf",
+    },
+    "vila": {
+        "loader": load_vila,
+        "default_id": "a8cheng/SpatialRGPT-VILA1.5-8B",
     },
 }
 
@@ -111,7 +184,91 @@ INPUT_BUILDERS = {
 
 
 # ============================================================
-# Core extraction (single sample)
+# VILA-specific extraction
+# ============================================================
+
+@torch.no_grad()
+def _extract_single_vila(
+    model,
+    processor_tuple,
+    image: Image.Image,
+    prompt: str,
+) -> np.ndarray:
+    """Extract last-token hidden states from VILA / SpatialRGPT.
+
+    VILA uses a custom forward path:
+      1. Tokenize with image tokens via tokenizer_image_token
+      2. Embed via model._embed (fuses image + text)
+      3. Forward through model.llm.model (the inner LLM)
+    """
+    import inspect
+    from llava.mm_utils import tokenizer_image_token
+    from llava.constants import DEFAULT_IMAGE_TOKEN
+
+    device, tokenizer, image_processor = processor_tuple
+
+    # Process image
+    img_t = image_processor(image, return_tensors="pt")["pixel_values"][0].to(device).half()
+    media = {"image": [img_t]}
+    media_config = {"image": {}}
+
+    # Wrap prompt in LLaVA chat format
+    chat_prompt = f"USER: <image>\n{prompt}\nASSISTANT:"
+
+    # Tokenize with image token handling
+    image_token_id = tokenizer.convert_tokens_to_ids(DEFAULT_IMAGE_TOKEN)
+
+    sig = inspect.signature(tokenizer_image_token)
+    param_names = list(sig.parameters.keys())
+
+    args = [chat_prompt, tokenizer]
+    kwargs = {}
+    if "return_tensors" in sig.parameters:
+        kwargs["return_tensors"] = "pt"
+
+    for name in ("image_token_index", "image_token", "image_token_id"):
+        if name in sig.parameters:
+            pos = param_names.index(name)
+            while len(args) < pos:
+                args.append(None)
+            args.append(image_token_id)
+            break
+
+    input_ids = tokenizer_image_token(*args, **kwargs)
+    if input_ids.dim() == 1:
+        input_ids = input_ids.unsqueeze(0)
+    input_ids = input_ids.to(device)
+
+    attention_mask = torch.ones_like(input_ids, device=device)
+
+    # VILA custom embed: fuses image patches into the token sequence
+    inputs_embeds, _, attention_mask = model._embed(
+        input_ids=input_ids,
+        media=media,
+        media_config=media_config,
+        labels=None,
+        attention_mask=attention_mask,
+    )
+
+    # Ensure embeds match the LLM's expected dtype
+    llm_dtype = next(model.llm.model.parameters()).dtype
+    inputs_embeds = inputs_embeds.to(dtype=llm_dtype)
+
+    # Forward through the inner LLM (not the outer wrapper)
+    out = model.llm.model(
+        inputs_embeds=inputs_embeds,
+        attention_mask=attention_mask,
+        output_hidden_states=True,
+        return_dict=True,
+    )
+
+    hs = out.hidden_states
+    last_token_per_layer = [hs[l][0, -1].detach().cpu().float().numpy() for l in range(len(hs))]
+    return np.stack(last_token_per_layer, axis=0)
+
+
+# ============================================================
+# Core extraction (single sample) — dispatches by model_tag
 # ============================================================
 
 @torch.no_grad()
@@ -126,6 +283,11 @@ def extract_single(
 
     Returns: np.ndarray of shape (n_layers, hidden_dim)
     """
+    # VILA has a completely different forward path
+    if model_tag == "vila":
+        return _extract_single_vila(model, processor, image, prompt)
+
+    # Standard HuggingFace models
     try:
         target_device = model.get_input_embeddings().weight.device
     except Exception:
@@ -141,10 +303,9 @@ def extract_single(
         use_cache=False,
     )
 
-    # out.hidden_states: tuple of (n_layers+1,) tensors, each (batch, seq_len, hidden_dim)
     hs = out.hidden_states
     last_token_per_layer = [hs[l][0, -1].detach().cpu().float().numpy() for l in range(len(hs))]
-    return np.stack(last_token_per_layer, axis=0)  # (n_layers, hidden_dim)
+    return np.stack(last_token_per_layer, axis=0)
 
 
 # ============================================================
@@ -159,6 +320,7 @@ def extract_dataset(
     model_id: Optional[str] = None,
     task: str = "spatial",
     limit: Optional[int] = None,
+    random_prompt: bool = False,
 ) -> np.ndarray:
     """Extract representations for an entire synthetic dataset.
 
@@ -200,7 +362,10 @@ def extract_dataset(
     for i, sample in enumerate(metadata):
         image_path = Path(images_dir) / sample["image_filename"]
         image = Image.open(image_path).convert("RGB")
-        prompt = sample["prompt"] + " "
+        # if random_prompt:
+        prompt = build_prompt(sample, task)
+        # else:
+            # prompt = sample["prompt"] + " "
         label = get_label(sample, task)
 
         try:

@@ -139,3 +139,30 @@ python scripts/extract_and_probe.py \
     --val_split_path=path_to_the_val_split_json \ # optional
     --skip_extraction # Skip extraction, use existing .npz (for re-running probes only)
 ```
+
+## Evaluate
+
+Example of evaluation with representations in `representations.npz`
+
+```bash
+# Single model — auto-finds representations.npz next to probes/
+python scripts/evaluate.py \
+    --probes_dir results/qwen2_spatial/probes \
+    --output results/qwen2_spatial/eval_plot.png \
+    --per_class
+
+# Compare models
+python scripts/evaluate.py \
+    --probes_dir results/qwen2_spatial/probes results/vila_spatial/probes \
+    --labels "Qwen2-VL" "SpatialRGPT-VILA" \
+    --output results/comparison.png
+```
+
+Example of evaluation with representations in `.pt` files
+
+```bash
+python scripts/evaluate.py \
+    --probes_dir results/qwen2_spatial/probes \
+    --pt_dir features/Qwen2-VL \
+    --output results/qwen2_spatial/eval_plot.png
+```
