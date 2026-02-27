@@ -1,6 +1,7 @@
 import json
 import csv
 from pathlib import Path
+import re
 
 # --------------------------------------------------
 # Paths
@@ -16,6 +17,21 @@ OUT_CSV  = PROJECT_ROOT / "data" / "vrd_relationships.csv"
 # --------------------------------------------------
 # Helpers
 # --------------------------------------------------
+_SUFFIX_RE = re.compile(r"^(?P<base>.+?)\s+\d+$")
+
+def _base_label(name: str) -> str:
+    """
+    'truck'    -> 'truck'
+    'truck 2'  -> 'truck'
+    'truck 10' -> 'truck'
+    """
+    name = (name or "").strip()
+    m = _SUFFIX_RE.match(name)
+    return m.group("base").strip() if m else name
+
+def _is_same_object_family(a: str, b: str) -> bool:
+    return _base_label(a) == _base_label(b)
+
 def _load_annotations(ann_path: Path):
     with ann_path.open("r") as f:
         return json.load(f)
@@ -60,6 +76,12 @@ def build_relationship_csv(rep=None):
             rel  = r.get("relationship", "")
             
             # -------------------------------
+            # filter out (xxx, xxx N) or (xxx N, xxx M)
+            # -------------------------------
+            if _is_same_object_family(subj, obj):
+                continue
+            
+            # -------------------------------
             # relationship filtering
             # -------------------------------
             if rep is not None and rel not in rep:
@@ -95,8 +117,8 @@ if __name__ == "__main__":
         "left of",
         "below",
         "above",
-        "in front of",
-        "behind",
+        #"in front of",
+        #"behind",
     ]
 
     build_relationship_csv(rep=rep)
