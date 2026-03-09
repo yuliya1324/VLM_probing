@@ -148,13 +148,15 @@ Example of evaluation with representations in `representations.npz`
 # Single model — auto-finds representations.npz next to probes/
 python scripts/evaluate.py \
     --probes_dir results/qwen2_spatial/probes \
+    --split_json data/splits/spatial/val.json \
     --output results/qwen2_spatial/eval_plot.png \
     --per_class
 
 # Compare models
 python scripts/evaluate.py \
     --probes_dir results/qwen2_spatial/probes results/vila_spatial/probes \
-    --labels "Qwen2-VL" "SpatialRGPT-VILA" \
+    --labels "Qwen2-VL" "SpatialRGPT-VILA" "LLaVA-1.5" \
+    --split_json data/splits/spatial/val.json \
     --output results/comparison.png
 ```
 

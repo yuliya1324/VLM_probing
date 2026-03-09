@@ -44,13 +44,40 @@ from src.probing.probe import load_probe
 # Data loading
 # ============================================================
 
-def load_from_npz(npz_path: str, split: str = "val", train_ratio: float = 0.8, seed: int = 42):
-    """Load representations and labels from .npz, return val split only."""
+def load_from_npz(npz_path: str, probes_dir: str = None, split: str = "val",
+                  split_json: str = None, train_ratio: float = 0.8, seed: int = 42):
+    """Load representations and labels from .npz, return the requested split.
+
+    Split source priority:
+      1. --split_json (e.g. data/splits/spatial/val.json) — most explicit
+      2. Saved indices in probes_dir (val_indices.npy) — from training
+      3. Regenerate from seed + train_ratio — fallback
+    """
     data = np.load(npz_path, allow_pickle=True)
     representations = data["representations"]  # (n_samples, n_layers, hidden_dim)
     labels = data["labels"]
     image_ids = data["image_ids"]
 
+    # 1. Use split JSON if provided
+    if split_json:
+        import json as _json
+        with open(split_json) as f:
+            split_samples = _json.load(f)
+        split_ids = set(s["image_id"] for s in split_samples)
+        mask = np.array([iid in split_ids for iid in image_ids])
+        print(f"  Using split JSON: {len(split_ids)} ids from {split_json}, matched {mask.sum()}")
+        return representations[mask], labels[mask], image_ids[mask]
+
+    # 2. Try saved split indices from training
+    if probes_dir:
+        split_file = Path(probes_dir) / f"{split}_indices.npy"
+        if split_file.exists():
+            idx = np.load(split_file)
+            print(f"  Using saved {split} indices ({len(idx)} samples) from {split_file}")
+            return representations[idx], labels[idx], image_ids[idx]
+
+    # 3. Fallback: regenerate split
+    print(f"  Warning: no saved split found, regenerating with seed={seed}")
     n = len(labels)
     rng = np.random.RandomState(seed)
     indices = rng.permutation(n)
@@ -277,7 +304,7 @@ def main():
     parser.add_argument("--representations", type=str, nargs="*", default=None,
                         help=".npz file(s) from extract_and_probe.py")
     parser.add_argument("--pt_dir", type=str, nargs="*", default=None,
-                        help="Directory(s) of .pt files for VRD representations")
+                        help="Directory(s) of .pt files from collaborator's extractors")
 
     parser.add_argument("--labels", type=str, nargs="*", default=None,
                         help="Legend labels for each run")
@@ -288,6 +315,9 @@ def main():
                         help="Show per-class accuracy breakdown (single run only)")
     parser.add_argument("--split", type=str, default="val", choices=["train", "val"],
                         help="Which split to evaluate on for .npz data")
+    parser.add_argument("--split_json", type=str, default=None,
+                        help="Path to split JSON (e.g. data/splits/spatial/val.json). "
+                             "Overrides --split and saved indices.")
     parser.add_argument("--save_json", action="store_true",
                         help="Save detailed results as JSON alongside the plot")
 
@@ -332,7 +362,10 @@ def main():
         print(f"{'='*60}")
 
         if src_type == "npz":
-            representations, labels, image_ids = load_from_npz(src_path, split=args.split)
+            representations, labels, image_ids = load_from_npz(
+                src_path, probes_dir=probes_dir, split=args.split,
+                split_json=args.split_json,
+            )
         else:
             representations, labels, image_ids = load_from_pt_dir(src_path)
 

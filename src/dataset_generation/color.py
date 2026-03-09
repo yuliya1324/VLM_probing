@@ -100,12 +100,19 @@ def generate_color_dataset(
         # Assign the target color to a random shape index
         target_idx = rng.randint(0, len(positions) - 1)
 
+        # Pick a unique shape type for the target so the prompt is unambiguous
+        target_stype = rng.choice(shape_types)
+
+        # Other shapes must use different shape types from the target
+        other_stypes = [s for s in shape_types if s != target_stype]
+
         shapes = []
         for j, (cx, cy, s) in enumerate(positions):
-            stype = rng.choice(shape_types)
             if j == target_idx:
+                stype = target_stype
                 cname = target_color
             else:
+                stype = rng.choice(other_stypes)
                 # Pick a different color from the target to avoid ambiguity
                 other_colors = [c for c in color_names if c != target_color]
                 cname = rng.choice(other_colors)
@@ -118,14 +125,8 @@ def generate_color_dataset(
         img_filename = f"{sample_id}.png"
         img.save(img_dir / img_filename)
 
-        # Prompt — always reference shape type so the model knows which shape
-        # When multiple shapes: use color-free descriptor like "the circle"
-        # When one shape: "the shape" or "the <shape_type>"
-        if n_shapes == 1:
-            desc = f"the {target_shape.shape_type.value}"
-        else:
-            # Use shape type; if duplicates exist, also mention position
-            desc = f"the {target_shape.shape_type.value}"
+        # Prompt — reference by shape type (guaranteed unique in the image)
+        desc = target_shape.shape_type.value
 
         if prompt_template_index is not None:
             template = PROMPT_TEMPLATES_COLOR[prompt_template_index]

@@ -20,9 +20,8 @@ Usage:
 from __future__ import annotations
 
 import json
-import re
 from pathlib import Path
-from typing import Optional, Callable, Dict, Any
+from typing import Optional, Dict, Any
 
 import numpy as np
 import torch
@@ -33,11 +32,6 @@ from PIL import Image
 # Prompt templates
 # ============================================================
 
-PROMPT_TEMPLATES = [
-    "The spatial relationship of {subj} to {obj} is",
-    "Considering the image, the {subj} is positioned ___ the {obj}. The answer is",
-    "Where is the {subj} relative to the {obj}? The {subj} is",
-]
 
 SPATIAL_PROMPT = (
     "Determine the spatial relationship of '{subj}' relative to '{obj}'.\n"
@@ -362,10 +356,7 @@ def extract_dataset(
     for i, sample in enumerate(metadata):
         image_path = Path(images_dir) / sample["image_filename"]
         image = Image.open(image_path).convert("RGB")
-        # if random_prompt:
         prompt = build_prompt(sample, task)
-        # else:
-            # prompt = sample["prompt"] + " "
         label = get_label(sample, task)
 
         try:
