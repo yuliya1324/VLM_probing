@@ -167,7 +167,8 @@ def prepare_inputs_qwen2(processor, prompt: str, image: Image.Image, device: tor
         messages, add_generation_prompt=True, tokenize=False,
     )
     inputs = processor(text=[text], images=[image], return_tensors="pt")
-    return {k: (v.to(device) if torch.is_tensor(v) else v) for k, v in inputs.items()}
+    return inputs
+    #return {k: (v.to(device) if torch.is_tensor(v) else v) for k, v in inputs.items()}
 
 
 def prepare_inputs_llava(processor, prompt: str, image: Image.Image, device: torch.device) -> dict:
