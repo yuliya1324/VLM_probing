@@ -15,6 +15,10 @@ Usage:
         model_id="Qwen/Qwen2-VL-7B-Instruct",
         task="spatial",
     )
+    
+03.09: for QWEN2 OOM:
+- load model with float16
+- ensmall input pictures
 """
 
 from __future__ import annotations
@@ -90,7 +94,7 @@ def load_qwen2vl(model_id: str):
     from transformers import Qwen2VLForConditionalGeneration, AutoProcessor
 
     model = Qwen2VLForConditionalGeneration.from_pretrained(
-        model_id, device_map="auto", torch_dtype="auto",
+        model_id, device_map="auto", torch_dtype=torch.float16, # for OOM
     )
     model.eval()
     processor = AutoProcessor.from_pretrained(model_id)
@@ -154,6 +158,8 @@ MODEL_REGISTRY: Dict[str, Dict[str, Any]] = {
 
 def prepare_inputs_qwen2(processor, prompt: str, image: Image.Image, device: torch.device) -> dict:
     """Prepare inputs for Qwen2-VL using its chat template."""
+    image = image.copy()
+    image.thumbnail((448, 448))
     messages = [
         {
             "role": "user",
