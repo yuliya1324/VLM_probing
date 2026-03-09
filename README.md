@@ -166,3 +166,13 @@ python scripts/evaluate.py \
     --pt_dir features/Qwen2-VL \
     --output results/qwen2_spatial/eval_plot.png
 ```
+
+## Extract hidden states on VRD
+
+```bash
+python scripts/extract_vrd.py \
+        --csv_path data/vrd_relationships.csv \
+        --output_path results/qwen2_vrd/representations.npz \
+        --model_tag qwen2 \
+        --save_every 200
+```
