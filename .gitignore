@@ -49,3 +49,4 @@ features/
 
 # external model repo (patched locally)
 VILA/
+src/vila

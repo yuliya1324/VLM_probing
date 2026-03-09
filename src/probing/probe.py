@@ -13,6 +13,7 @@ from typing import Optional
 import joblib
 import numpy as np
 from sklearn.linear_model import LogisticRegression
+from sklearn.multiclass import OneVsRestClassifier
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import accuracy_score, classification_report
 
@@ -85,13 +86,14 @@ def train_probes(
         X_train = representations[train_mask, layer_idx, :]  # (n_train, hidden_dim)
         X_val = representations[val_mask, layer_idx, :]
 
-        probe = LogisticRegression(
-            C=C,
-            penalty="l2",
-            multi_class="ovr",  # one-vs-rest
-            solver="lbfgs",
-            max_iter=max_iter,
-            random_state=seed,
+        probe = OneVsRestClassifier(
+            LogisticRegression(
+                C=C,
+                penalty="l2",
+                solver="lbfgs",
+                max_iter=max_iter,
+                random_state=seed,
+            )
         )
         probe.fit(X_train, y_train)
 

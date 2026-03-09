@@ -39,8 +39,8 @@ from .renderer import render_image
 CANVAS_W = 448
 CANVAS_H = 448
 MARGIN = 60          # keep shapes away from edges
-MIN_GAP = 40         # minimum gap between shape centers on the *non-diagnostic* axis
-SIZE_RANGE = (25, 50)  # half-side / radius range
+MIN_GAP = 80         # minimum gap between shape centers on the diagnostic axis
+SIZE_RANGE = (20, 40)  # half-side / radius range
 
 
 def _random_shape(rng: random.Random) -> ShapeType:
@@ -57,11 +57,15 @@ def _random_color_pair(rng: random.Random) -> tuple[str, str]:
 def _place_pair(
     relation: SpatialRelation,
     rng: random.Random,
-) -> tuple[tuple[float, float], tuple[float, float]]:
+) -> tuple:
     """Return (subject_center, reference_center) satisfying the relation.
 
-    We ensure a clear spatial gap along the diagnostic axis and randomise the
-    other axis so the model cannot rely on a fixed template.
+    We ensure a clear spatial gap along the diagnostic axis AND constrain
+    the non-diagnostic axis so shapes are roughly aligned. This prevents
+    diagonal placements where the label would be ambiguous.
+
+    Alignment jitter: up to ±30px on the non-diagnostic axis so images
+    aren't perfectly grid-like, but small enough that the relation is clear.
     """
     s_size = rng.uniform(*SIZE_RANGE)
     r_size = rng.uniform(*SIZE_RANGE)
@@ -71,36 +75,54 @@ def _place_pair(
     hi_x = CANVAS_W - MARGIN - max_r
     hi_y = CANVAS_H - MARGIN - max_r
 
+    ALIGN_JITTER = 30  # max offset on the non-diagnostic axis
+
     if relation == SpatialRelation.LEFT_OF:
-        # subject.x < reference.x  (clear horizontal gap)
+        # subject.x < reference.x, Y roughly aligned
         ref_x = rng.uniform(lo + MIN_GAP + max_r, hi_x)
         sub_x = rng.uniform(lo, ref_x - MIN_GAP)
-        sub_y = rng.uniform(lo, hi_y)
-        ref_y = rng.uniform(lo, hi_y)
+        base_y = rng.uniform(lo, hi_y)
+        sub_y = base_y + rng.uniform(-ALIGN_JITTER, ALIGN_JITTER)
+        ref_y = base_y + rng.uniform(-ALIGN_JITTER, ALIGN_JITTER)
+        sub_y = max(lo, min(hi_y, sub_y))
+        ref_y = max(lo, min(hi_y, ref_y))
 
     elif relation == SpatialRelation.RIGHT_OF:
-        # subject.x > reference.x
+        # subject.x > reference.x, Y roughly aligned
         ref_x = rng.uniform(lo, hi_x - MIN_GAP - max_r)
         sub_x = rng.uniform(ref_x + MIN_GAP, hi_x)
-        sub_y = rng.uniform(lo, hi_y)
-        ref_y = rng.uniform(lo, hi_y)
+        base_y = rng.uniform(lo, hi_y)
+        sub_y = base_y + rng.uniform(-ALIGN_JITTER, ALIGN_JITTER)
+        ref_y = base_y + rng.uniform(-ALIGN_JITTER, ALIGN_JITTER)
+        sub_y = max(lo, min(hi_y, sub_y))
+        ref_y = max(lo, min(hi_y, ref_y))
 
     elif relation == SpatialRelation.ABOVE:
-        # subject.y < reference.y  (PIL: y increases downward → "above" = smaller y)
+        # subject.y < reference.y, X roughly aligned
         ref_y = rng.uniform(lo + MIN_GAP + max_r, hi_y)
         sub_y = rng.uniform(lo, ref_y - MIN_GAP)
-        sub_x = rng.uniform(lo, hi_x)
-        ref_x = rng.uniform(lo, hi_x)
+        base_x = rng.uniform(lo, hi_x)
+        sub_x = base_x + rng.uniform(-ALIGN_JITTER, ALIGN_JITTER)
+        ref_x = base_x + rng.uniform(-ALIGN_JITTER, ALIGN_JITTER)
+        sub_x = max(lo, min(hi_x, sub_x))
+        ref_x = max(lo, min(hi_x, ref_x))
 
     elif relation == SpatialRelation.BELOW:
-        # subject.y > reference.y
+        # subject.y > reference.y, X roughly aligned
         ref_y = rng.uniform(lo, hi_y - MIN_GAP - max_r)
         sub_y = rng.uniform(ref_y + MIN_GAP, hi_y)
-        sub_x = rng.uniform(lo, hi_x)
-        ref_x = rng.uniform(lo, hi_x)
+        base_x = rng.uniform(lo, hi_x)
+        sub_x = base_x + rng.uniform(-ALIGN_JITTER, ALIGN_JITTER)
+        ref_x = base_x + rng.uniform(-ALIGN_JITTER, ALIGN_JITTER)
+        sub_x = max(lo, min(hi_x, sub_x))
+        ref_x = max(lo, min(hi_x, ref_x))
 
     return (sub_x, sub_y, s_size), (ref_x, ref_y, r_size)
 
+
+# ---------------------------------------------------------------------------
+# Prompt templates
+# ---------------------------------------------------------------------------
 
 PROMPT_TEMPLATES = [
     "The spatial relationship of {subject} to {reference} is",
@@ -113,6 +135,10 @@ def _make_prompt(subject_desc: str, reference_desc: str, rng: random.Random) -> 
     template = rng.choice(PROMPT_TEMPLATES)
     return template.format(subject=subject_desc, reference=reference_desc)
 
+
+# ---------------------------------------------------------------------------
+# Public generator
+# ---------------------------------------------------------------------------
 
 def generate_spatial_dataset(
     n_samples: int = 3000,
