@@ -1,11 +1,13 @@
-"""Generate synthetic color-identification dataset (sanity-check task).
+"""Generate synthetic color-identification dataset.
 
-Each image contains 1–3 shapes. We pick one as the *target* and ask the model
-to identify its color. The probe should easily succeed if representations
-capture visual information at all.
+Each image contains 1–3 shapes on a varied background. We pick one shape
+as the *target* and ask the model to identify its color.
 
-This validates the full pipeline (extraction → probing) before we move to
-the harder spatial-relation task.
+Robustness features:
+  - Color shades: each color name maps to multiple RGB values, randomly sampled
+  - Background variation: random background colors to prevent shortcut learning
+  - Target shape type is unique in the image (unambiguous prompts)
+  - White/black shapes avoid white/light or dark backgrounds respectively
 """
 
 import json
@@ -20,7 +22,9 @@ except ImportError:
         return iterable
 
 from .schema import (
-    SHAPE_COLORS,
+    COLOR_BASE,
+    COLOR_SHADES,
+    BACKGROUND_COLORS,
     ShapeInstance,
     ShapeType,
     ColorSample,
@@ -37,20 +41,50 @@ PROMPT_TEMPLATES_COLOR = [
     "The color of the {shape} in the image is",
     "What color is the {shape}? The answer is",
     "Looking at the image, the {shape} is colored",
+    "Identify the color of the {shape}. The color is",
 ]
 
+# Backgrounds too close to white/black cause ambiguity
+DARK_BG_THRESHOLD = 120   # avg RGB below this = "dark"
+LIGHT_BG_THRESHOLD = 210  # avg RGB above this = "light"
 
-def _random_positions(n: int, rng: random.Random) -> list[tuple[float, float, float]]:
+
+def _pick_background(rng: random.Random, target_color: str) -> tuple:
+    """Pick a background color that contrasts with the target."""
+    candidates = list(BACKGROUND_COLORS)
+
+    if target_color == "white":
+        # Avoid light backgrounds
+        candidates = [c for c in candidates if sum(c) / 3 < LIGHT_BG_THRESHOLD]
+        if not candidates:
+            candidates = [(160, 160, 160)]  # fallback medium gray
+    elif target_color == "black":
+        # Avoid dark backgrounds
+        candidates = [c for c in candidates if sum(c) / 3 > DARK_BG_THRESHOLD]
+        if not candidates:
+            candidates = [(230, 230, 230)]  # fallback light gray
+
+    return rng.choice(candidates)
+
+
+def _pick_shade(rng: random.Random, color_name: str) -> tuple:
+    """Pick a random shade for a color name."""
+    shades = COLOR_SHADES.get(color_name)
+    if shades:
+        return rng.choice(shades)
+    return COLOR_BASE[color_name]
+
+
+def _random_positions(n: int, rng: random.Random) -> list:
     """Generate n non-overlapping (cx, cy, size) tuples."""
     positions = []
-    for _ in range(n * 20):  # retry budget
+    for _ in range(n * 20):
         s = rng.uniform(*SIZE_RANGE)
         cx = rng.uniform(MARGIN + s, CANVAS_W - MARGIN - s)
         cy = rng.uniform(MARGIN + s, CANVAS_H - MARGIN - s)
-        # Check overlap
         ok = True
         for ox, oy, os in positions:
-            if abs(cx - ox) < (s + os + 15) and abs(cy - oy) < (s + os + 15):
+            if abs(cx - ox) < (s + os + 20) and abs(cy - oy) < (s + os + 20):
                 ok = False
                 break
         if ok:
@@ -66,17 +100,16 @@ def generate_color_dataset(
     seed: int = 123,
     min_shapes: int = 1,
     max_shapes: int = 3,
-    prompt_template_index: Optional[int] = None,  # None = random
-) -> list[dict]:
+) -> list:
     """Generate color-identification images and metadata."""
     rng = random.Random(seed)
     img_dir = Path(output_dir) / "images"
     img_dir.mkdir(parents=True, exist_ok=True)
 
-    color_names = list(SHAPE_COLORS.keys())
+    color_names = list(COLOR_BASE.keys())
     shape_types = list(ShapeType)
 
-    # Ensure roughly balanced color distribution for the *target*
+    # Balanced color distribution
     targets_per_color = n_samples // len(color_names)
     color_list = []
     for c in color_names:
@@ -85,7 +118,7 @@ def generate_color_dataset(
         color_list.append(rng.choice(color_names))
     rng.shuffle(color_list)
 
-    samples: list[dict] = []
+    samples = []
 
     for i, target_color in enumerate(tqdm(color_list, desc="Generating color dataset")):
         sample_id = f"color_{i:05d}"
@@ -93,17 +126,14 @@ def generate_color_dataset(
         positions = _random_positions(n_shapes, rng)
 
         if len(positions) < 1:
-            # fallback: single centered shape
             positions = [(CANVAS_W / 2, CANVAS_H / 2, 40)]
-            n_shapes = 1
 
-        # Assign the target color to a random shape index
+        # Pick background that contrasts with target color
+        bg_color = _pick_background(rng, target_color)
+
+        # Target gets a unique shape type
         target_idx = rng.randint(0, len(positions) - 1)
-
-        # Pick a unique shape type for the target so the prompt is unambiguous
         target_stype = rng.choice(shape_types)
-
-        # Other shapes must use different shape types from the target
         other_stypes = [s for s in shape_types if s != target_stype]
 
         shapes = []
@@ -111,27 +141,26 @@ def generate_color_dataset(
             if j == target_idx:
                 stype = target_stype
                 cname = target_color
+                rgb = _pick_shade(rng, target_color)
             else:
                 stype = rng.choice(other_stypes)
-                # Pick a different color from the target to avoid ambiguity
+                # Pick a different color that also contrasts with background
                 other_colors = [c for c in color_names if c != target_color]
                 cname = rng.choice(other_colors)
-            shapes.append(ShapeInstance(stype, cname, cx, cy, s))
+                rgb = _pick_shade(rng, cname)
+
+            shapes.append(ShapeInstance(stype, cname, cx, cy, s, rgb_override=rgb))
 
         target_shape = shapes[target_idx]
 
-        # Render
-        img = render_image(shapes, canvas_size=(CANVAS_W, CANVAS_H))
+        # Render with varied background
+        img = render_image(shapes, canvas_size=(CANVAS_W, CANVAS_H), bg_color=bg_color)
         img_filename = f"{sample_id}.png"
         img.save(img_dir / img_filename)
 
-        # Prompt — reference by shape type (guaranteed unique in the image)
+        # Prompt
         desc = target_shape.shape_type.value
-
-        if prompt_template_index is not None:
-            template = PROMPT_TEMPLATES_COLOR[prompt_template_index]
-        else:
-            template = rng.choice(PROMPT_TEMPLATES_COLOR)
+        template = rng.choice(PROMPT_TEMPLATES_COLOR)
         prompt = template.format(shape=desc)
 
         sample = ColorSample(

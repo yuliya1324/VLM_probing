@@ -32,7 +32,6 @@ from PIL import Image
 # Prompt templates
 # ============================================================
 
-
 SPATIAL_PROMPT = (
     "Determine the spatial relationship of '{subj}' relative to '{obj}'.\n"
     "Choose ONE label from:\n"
@@ -45,9 +44,17 @@ COLOR_PROMPT = (
     "Respond with ONLY the color name. No explanation."
 )
 
+SHAPE_PROMPT = (
+    "What is the shape of the {color} object in the image?\n"
+    "Choose ONE label from:\n"
+    "[circular, oval, square, rectangular, triangular]\n"
+    "Respond with ONLY the label. No explanation."
+)
+
 PROMPT_TEMPLATES = {
     "spatial": SPATIAL_PROMPT,
     "color": COLOR_PROMPT,
+    "shape": SHAPE_PROMPT,
 }
 
 
@@ -62,6 +69,9 @@ def build_prompt(sample: dict, task: str) -> str:
     elif task == "color":
         subj = sample["shape_type"]
         return template.format(subj=subj)
+    elif task == "shape":
+        color = sample["color_name"]
+        return template.format(color=color)
     else:
         raise ValueError(f"Unknown task: {task}")
 
@@ -72,6 +82,8 @@ def get_label(sample: dict, task: str) -> str:
         return sample["relation"]
     elif task == "color":
         return sample["color_label"]
+    elif task == "shape":
+        return sample["shape_label"]
     else:
         raise ValueError(f"Unknown task: {task}")
 
@@ -201,7 +213,7 @@ def _extract_single_vila(
 
     device, tokenizer, image_processor = processor_tuple
 
-    # Process image
+    # Process image — match vision tower dtype (float16)
     img_t = image_processor(image, return_tensors="pt")["pixel_values"][0].to(device).half()
     media = {"image": [img_t]}
     media_config = {"image": {}}
@@ -314,7 +326,6 @@ def extract_dataset(
     model_id: Optional[str] = None,
     task: str = "spatial",
     limit: Optional[int] = None,
-    random_prompt: bool = False,
 ) -> np.ndarray:
     """Extract representations for an entire synthetic dataset.
 

@@ -18,16 +18,21 @@ vlm-spatial-probing/
 ├── src/
 │   ├── dataset_generation/     # Synthetic image + label generation
 │   │   ├── spatial.py          # Spatial relationship dataset
-│   │   ├── color.py            # Color identification dataset (sanity check)
+│   │   ├── color.py            # Color identification dataset 
+│   │   ├── shape.py            # Shape identification dataset 
 │   │   ├── renderer.py         # Shape rendering engine
 │   │   └── schema.py           # Data schemas / types
 │   ├── extraction/             # Hidden state extraction from VLMs
-│       └── extract.py
+│   │   └── extract.py
 │   └── probing/                # Linear probe training & evaluation
 │       └── probe.py
+│   └── steering/               # Steering code
+│       └── steer.py
 ├── scripts/                    # Entry-point scripts
+│   ├── generate_dataset.py     # Script for generating the dataset
 │   ├── extract_and_probe.py    # Script for the whole pipeline extract & probe
-│   └── generate_dataset.py     # Script for generating the dataset
+│   ├── evaluate.py             # Script for evaluation
+│   └── run_steering.py         # Script for steering
 ├── notebooks/                  # Exploratory notebooks
 ├── results/                    # Saved probe results, plots
 ├── requirements.txt
@@ -52,15 +57,6 @@ vlm-spatial-probing/
 
 ## Environment Usage
 
-This project uses TWO environments depending on the task.
-
-### Default environment (development)
-```bash
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
-### Extract (hidden states, Python 3.11)
 We use Python 3.11 for extraction (cluster default is 3.9).
 
 Reason:
@@ -73,14 +69,18 @@ python -m ensurepip
 python -m pip install --upgrade pip
 python -m pip install -r requirements-extract.txt --no-deps
 python -m pip install -e "git+https://github.com/NVlabs/VILA.git@b760c34b9487fd736b4075f5111fbef3d80a37e9#egg=vila" --no-deps
-# pip install -r requirements-extract.txt
 ```
 Run:
 ```bash
 ./scripts/run_extract.sh
 ```
+Model Setup (SpacialRGBT)
 
-⚠️ Do NOT run extraction scripts inside venv.
+```bash
+git submodule update --init --recursive
+python -m pip install -e ./VILA --no-deps
+git apply patches/vila_local.patch
+```
 
 ## Generate dataset
 
@@ -88,8 +88,11 @@ Run:
 # Generate spatial dataset (default: 3000 samples)
 python scripts/generate_dataset.py --config configs/spatial_dataset.yaml
 
-# Generate color dataset (sanity check, default: 1000 samples)
+# Generate color dataset (default: 1000 samples)
 python scripts/generate_dataset.py --config configs/color_dataset.yaml
+
+# Generate shape dataset (default: 1000 samples)
+python scripts/generate_dataset.py --task shape
 ```
 
 ## Download VRD Dataset
@@ -112,21 +115,6 @@ Notes
 - Only samples with existing images are included.
 - One image may produce multiple rows (one per relationship).
 
-## Model Setup (SpacialRGBT)
-
-```bash
-git submodule update --init --recursive
-python -m pip install -e ./VILA --no-deps
-git apply patches/vila_local.patch
-```
-
-## Extract Hidden States
-
-```bash
-python src/lasttoken/extract_{llava15, qwen2, spatialRGBT}.py
-```
-⚠️ Make sure you are on `venv-extract`
-
 ## Extract Hiddens and Train the Probes
 
 ```bash
@@ -138,6 +126,12 @@ python scripts/extract_and_probe.py \
     --train_split_path=path_to_the_train_split_json \ # optional
     --val_split_path=path_to_the_val_split_json \ # optional
     --skip_extraction # Skip extraction, use existing .npz (for re-running probes only)
+```
+
+## Extract Hidden States for VRD dataset
+
+```bash
+python src/lasttoken/extract_{llava15, qwen2, spatialRGBT}.py
 ```
 
 ## Evaluate
@@ -167,4 +161,63 @@ python scripts/evaluate.py \
     --probes_dir results/qwen2_spatial/probes \
     --pt_dir features/Qwen2-VL \
     --output results/qwen2_spatial/eval_plot.png
+```
+
+## Steering
+
+
+```bash
+# Basic steering
+python scripts/steer.py \
+    --model_tag qwen2 \
+    --image_path data/raw/spatial/images/spatial_00042.png \
+    --prompt "Where is the red circle relative to the blue square?" \
+    --probes_dir results/qwen2_spatial/probes \
+    --layers 11 18 20 \ # can be a list or a single layer
+    --target left_of \
+    --alpha 10
+
+# Contrast: push left, suppress right
+python scripts/steer.py \
+    --model_tag qwen2 \
+    --image_path data/raw/spatial/images/spatial_00042.png \
+    --prompt "Where is the red circle relative to the blue square?" \
+    --probes_dir results/qwen2_spatial/probes \
+    --layers 20 \
+    --target left_of --source right_of \
+    --alpha 10
+
+# Sweep alpha to find the sweet spot
+python scripts/steer.py \
+    --model_tag qwen2 \
+    --image_path data/raw/spatial/images/spatial_00042.png \
+    --prompt "Where is the red circle relative to the blue square?" \
+    --probes_dir results/qwen2_spatial/probes \
+    --layers 20 \
+    --target left_of \
+    --sweep
+```
+
+Usage in a notebook (check `notebooks/steering`):
+
+```python
+from src.steering.steer import steer_and_generate, SteeringManager
+
+# Quick one-liner
+result = steer_and_generate(
+    model, processor, "qwen2", image, prompt,
+    probes_dir="results/qwen2_spatial/probes",
+    layers=[18, 20, 22],
+    target_class="left_of",
+    alpha=5.0,
+    when="prefill",
+)
+
+# Or manual control with context manager
+with SteeringManager.from_probes(
+    model, "qwen2", "results/qwen2_spatial/probes",
+    layers=[18, 20, 22],
+    target_class="left_of", alpha=5.0, when="prefill",
+):
+    output = _generate(model, processor, "qwen2", image, prompt, 50)
 ```
