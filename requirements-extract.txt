@@ -160,3 +160,4 @@ xgrammar==0.1.31
 xxhash==3.6.0
 yacs==0.1.8
 yarl==1.22.0
+streamlit
