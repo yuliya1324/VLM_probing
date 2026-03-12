@@ -33,6 +33,22 @@ vlm-spatial-probing/
 ├── requirements.txt
 └── README.md
 ```
+```
+results/
+  color/qwen2/
+    probes/                       # probe trained on synthetic dataset
+    representations.npz
+    probe_results.json
+
+  vrd_color/qwen2/
+    raw_response_predictions.csv  # Step 1 (Acc. of raw responces)
+    representations.npz           # VRD full
+    correct/
+      representations.npz         # raw response correct subset
+      eval_with_synth_probes.png  # Step 2
+      probes/                     # Step 3: probe retrained on VRD correct subset
+      probe_results.json
+```
 
 ## Pipeline
 
