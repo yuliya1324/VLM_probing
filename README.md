@@ -192,3 +192,34 @@ python scripts/extract_vrd.py \
         --model_tag qwen2 \
         --save_every 200
 ```
+
+## Calculate accuracy on VLM's responces
+```bash
+python scripts/evaluate_vrd_raw.py \
+        --task color \
+        --model_tag qwen2 \
+        --max_new_tokens 4
+```
+
+## Reevaluate probing on VRD correct subset
+```bash
+python scripts/make_correct_subset.py \
+    --pred_csv results/vrd_color/qwen2/raw_response_predictions.csv \
+    --repr_npz results/vrd_color/qwen2/representations.npz \
+    --out_npz  results/vrd_color/qwen2/correct/representations.npz &&
+
+python scripts/evaluate.py \
+    --probes_dir results/color/qwen2/probes \
+    --representations results/vrd_color/qwen2/correct/representations.npz \
+    --split all \
+    --output results/vrd_color/qwen2/correct/eval_with_synth_probes.png
+```
+
+## Train on VRD correct subset
+```bash
+python scripts/extract_and_probe.py \
+    --task color \
+    --model_tag qwen2 \
+    --output_dir results/vrd_color/qwen2/correct \
+    --skip_extraction;
+```
