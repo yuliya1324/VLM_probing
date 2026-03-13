@@ -46,7 +46,12 @@ def train_probes(
     data = np.load(representations_path, allow_pickle=True)
     representations = data["representations"]  # (n_samples, n_layers, hidden_dim)
     labels_raw = data["labels"]                # (n_samples,)
-    image_ids = data["image_ids"]              # (n_samples,)
+    if "image_ids" in data:
+        image_ids = data["image_ids"]
+    elif "sample_ids" in data:
+        image_ids = data["sample_ids"]
+    else:
+        raise KeyError("Neither 'image_ids' nor 'sample_ids' found in representations archive")
 
     n_samples, n_layers, hidden_dim = representations.shape
     print(f"Data: {n_samples} samples, {n_layers} layers, {hidden_dim} hidden dim")

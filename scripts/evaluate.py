@@ -7,19 +7,19 @@ Supports two data formats:
 
 Usage:
     # Evaluate using .npz (synthetic dataset)
-    python scripts/evaluate_all_layers.py \
+    python scripts/evaluate.py \
         --probes_dir results/qwen2_spatial/probes \
         --representations data/processed/qwen2_spatial.npz \
         --output results/qwen2_spatial/eval_all_layers.png
 
     # Evaluate using .pt files (collaborator's VRD format)
-    python scripts/evaluate_all_layers.py \
+    python scripts/evaluate.py \
         --probes_dir results/qwen2_vrd/probes \
         --pt_dir features/Qwen2-VL \
         --output results/qwen2_vrd/eval_all_layers.png
 
     # Compare multiple runs
-    python scripts/evaluate_all_layers.py \
+    python scripts/evaluate.py \
         --probes_dir results/qwen2_spatial/probes results/vila_spatial/probes \
         --representations results/qwen2_spatial/representations.npz results/vila_spatial/representations.npz \
         --labels "Qwen2-VL" "SpatialRGPT-VILA" \
@@ -39,17 +39,42 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.probing.probe import load_probe
 
+# ============================================================
+# Helper
+# ============================================================
+
+def normalize_label(label: str) -> str | None:
+    label = label.strip().lower()
+    mapping = {
+        "left of": "left_of",
+        "right of": "right_of",
+        "above": "above",
+        "below": "below",
+    }
+    return mapping.get(label, None)
+
 
 # ============================================================
 # Data loading
 # ============================================================
 
 def load_from_npz(npz_path: str, split: str = "val", train_ratio: float = 0.8, seed: int = 42):
-    """Load representations and labels from .npz, return val split only."""
+    """Load representations and labels from .npz."""
     data = np.load(npz_path, allow_pickle=True)
-    representations = data["representations"]  # (n_samples, n_layers, hidden_dim)
+    representations = data["representations"]
     labels = data["labels"]
-    image_ids = data["image_ids"]
+
+    if "image_ids" in data.files:
+        image_ids = data["image_ids"]
+    elif "sample_ids" in data.files:
+        image_ids = data["sample_ids"]
+    elif "ids" in data.files:
+        image_ids = np.arange(len(labels))
+    else:
+        image_ids = np.arange(len(labels))
+
+    if split == "all":
+        return representations, labels, image_ids
 
     n = len(labels)
     rng = np.random.RandomState(seed)
@@ -68,19 +93,33 @@ def load_from_pt_dir(pt_dir: str):
     """Load representations and labels from a directory of .pt files.
 
     Each .pt file has:
-        {"layers": {0: tensor, 1: tensor, ...}, "meta": {"rel": ..., ...}}
+        {"layers": {...}, "meta": {"rel": ..., ...}}
     """
+    from pathlib import Path
+    import numpy as np
+    import torch
+
     pt_dir = Path(pt_dir)
-    pt_files = sorted(pt_dir.glob("*.pt"))
+    pt_files = sorted(pt_dir.rglob("*.pt"))
 
     if not pt_files:
         raise FileNotFoundError(f"No .pt files found in {pt_dir}")
 
-    import torch
-
     all_reprs = []
     all_labels = []
     all_ids = []
+
+    expected_shape = None
+    skipped = []
+
+    def sort_key(k):
+        if isinstance(k, int):
+            return k
+        if isinstance(k, str) and k.isdigit():
+            return int(k)
+        if isinstance(k, str) and k.startswith("layer_"):
+            return int(k.split("_")[-1])
+        return str(k)
 
     for pt_path in pt_files:
         data = torch.load(pt_path, map_location="cpu", weights_only=False)
@@ -89,21 +128,69 @@ def load_from_pt_dir(pt_dir: str):
 
         label = meta.get("rel") or meta.get("relationship")
         if label is None:
+            skipped.append((pt_path.name, "missing label"))
             continue
 
-        n_layers = len(layers)
-        layer_tensors = [layers[l].float().numpy() for l in range(n_layers)]
-        sample_repr = np.stack(layer_tensors, axis=0)
+        layer_keys = sorted(layers.keys(), key=sort_key)
+
+        layer_tensors = []
+        bad_sample = False
+
+        for k in layer_keys:
+            t = layers[k]
+
+            if hasattr(t, "detach"):
+                t = t.detach().cpu().float().numpy()
+            else:
+                t = np.asarray(t, dtype=np.float32)
+
+            t = np.squeeze(t)
+
+            if t.ndim != 1:
+                skipped.append((pt_path.name, f"layer {k} has shape {t.shape} after squeeze"))
+                bad_sample = True
+                break
+
+            layer_tensors.append(t)
+
+        if bad_sample:
+            continue
+
+        try:
+            sample_repr = np.stack(layer_tensors, axis=0)
+        except ValueError:
+            skipped.append((pt_path.name, "could not stack layer tensors"))
+            continue
+
+        if expected_shape is None:
+            expected_shape = sample_repr.shape
+        elif sample_repr.shape != expected_shape:
+            skipped.append((pt_path.name, f"shape mismatch {sample_repr.shape} != {expected_shape}"))
+            continue
 
         all_reprs.append(sample_repr)
         all_labels.append(label)
         all_ids.append(pt_path.stem)
 
+    if not all_reprs:
+        raise ValueError(f"No valid samples loaded from {pt_dir}")
+
     representations = np.stack(all_reprs, axis=0)
     labels = np.array(all_labels)
     image_ids = np.array(all_ids)
 
-    print(f"Loaded {len(labels)} samples from .pt files ({n_layers} layers, {representations.shape[2]} dim)")
+    print(
+        f"Loaded {len(labels)} valid samples from .pt files "
+        f"({representations.shape[1]} layers, {representations.shape[2]} dim)"
+    )
+
+    if skipped:
+        print(f"Skipped {len(skipped)} files:")
+        for name, reason in skipped[:20]:
+            print(f"  - {name}: {reason}")
+        if len(skipped) > 20:
+            print(f"  ... and {len(skipped) - 20} more")
+
     return representations, labels, image_ids
 
 
@@ -139,7 +226,49 @@ def evaluate_all_layers(
     # Encode labels using the same encoder
     import joblib
     le = joblib.load(probes_dir / "label_encoder.joblib")
+    """
+    normalized_labels = np.array([normalize_label(x) for x in labels])
+    valid_mask = np.array([x is not None for x in normalized_labels])
+
+    representations = representations[valid_mask]
+    labels = normalized_labels[valid_mask]
+
+    print(f"Kept {len(labels)} samples after filtering to supported classes: {list(le.classes_)}")
+
+    y_true = le.transform(labels)    
+    """
+    supported = set(le.classes_)
+
+    def normalize_for_probe(label: str):
+        label = str(label).strip().lower()
+
+        # spatial aliases
+        alias_map = {
+            "left of": "left_of",
+            "right of": "right_of",
+        }
+        label = alias_map.get(label, label)
+
+        # keep only labels supported by this probe
+        if label in supported:
+            return label
+        return None
+
+    normalized_labels = np.array([normalize_for_probe(x) for x in labels], dtype=object)
+    valid_mask = np.array([x is not None for x in normalized_labels])
+
+    representations = representations[valid_mask]
+    labels = normalized_labels[valid_mask]
+
+    print(f"Kept {len(labels)} samples after filtering to supported classes: {list(le.classes_)}")
+
+    if len(labels) == 0:
+        raise ValueError(
+            f"No samples remain after filtering to supported classes {list(le.classes_)}"
+        )
+
     y_true = le.transform(labels)
+    
 
     layer_accuracies = []
     per_class_accuracies = []
@@ -286,7 +415,7 @@ def main():
     parser.add_argument("--title", type=str, default="Probe Accuracy Across Layers")
     parser.add_argument("--per_class", action="store_true",
                         help="Show per-class accuracy breakdown (single run only)")
-    parser.add_argument("--split", type=str, default="val", choices=["train", "val"],
+    parser.add_argument("--split", type=str, default="val", choices=["train", "val", "all"],
                         help="Which split to evaluate on for .npz data")
     parser.add_argument("--save_json", action="store_true",
                         help="Save detailed results as JSON alongside the plot")

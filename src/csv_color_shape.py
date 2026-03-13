@@ -1,3 +1,12 @@
+"""
+Exclude
+ - < 1000 area
+ - images with same objects
+ 
+Color: downsampling
+"""
+
+
 import pandas as pd
 import re
 from pathlib import Path
@@ -5,26 +14,22 @@ from pathlib import Path
 # ============================================================
 # Paths
 # ============================================================
-INPUT_CSV = Path("/Data/masayo.tomita/VLM_probing/data/vrd_attributes.csv")
-OUT_COLOR_CSV = Path("/Data/masayo.tomita/VLM_probing/data/vrd_color.csv")
-OUT_SHAPE_CSV = Path("/Data/masayo.tomita/VLM_probing/data/vrd_shape.csv")
+INPUT_CSV = Path("/Data/masayo.tomita/VLM_probing/data/vrd_csv/vrd_attributes.csv")
+OUT_COLOR_CSV = Path("/Data/masayo.tomita/VLM_probing/data/vrd_csv/vrd_color.csv")
+OUT_SHAPE_CSV = Path("/Data/masayo.tomita/VLM_probing/data/vrd_csv/vrd_shape.csv")
 
 
 # ============================================================
 # Canonical vocabularies
 # ============================================================
 COLOR_CANONICAL = {
-    "black", "white", "gray", "grey", "blue", "red", "green", "yellow",
-    "orange", "brown", "pink", "purple", "beige", "tan", "gold", "silver",
-    "bronze", "cream", "ivory", "teal", "turquoise", "violet", "lavender",
-    "maroon", "navy", "peach", "amber"
+    "black", "white", "gray", "blue", "red", "green", "yellow",
+    "orange", "brown", "pink", "purple",
 }
 
 SHAPE_CANONICAL = {
-    "round", "circular", "rectangle", "rectangular", "square",
-    "triangle", "triangular", "oval", "octagon", "octagonal",
-    "pentagon", "pentagonal", "cylindrical", "sphere", "spherical",
-    "cone", "conical", "cube"
+    "round", "circular", "rectangular", "square",
+    "triangular", "oval",
 }
 
 
@@ -37,36 +42,30 @@ NORMALIZATION_MAP = {
     "gra y": "gray",
     "grayish": "gray",
     "graying": "gray",
-    "greyish": "grey",
+    "grey": "gray",
+    "greyish": "gray",
+    "blue-grey": "gray",
+    "blue gray": "gray",
     "bluish": "blue",
     "bluey": "blue",
-    "blue-grey": "grey",
-    "blue gray": "gray",
     "greenish": "green",
     "reddish": "red",
     "reddish-brown": "brown",
     "yellowish": "yellow",
     "pinkish": "pink",
-    "golden": "gold",
-    "goldish": "gold",
-    "silver\\": "silver",
     "off white": "white",
     "off-white": "white",
     "offwhite": "white",
-    "cream colored": "cream",
-    "cream-colored": "cream",
-    "egg colored": "cream",
     "light blue": "blue",
     "dark blue": "blue",
     "light green": "green",
     "dark green": "green",
     "light brown": "brown",
     "dark brown": "brown",
-    "light grey": "grey",
-    "dark grey": "grey",
+    "light grey": "gray",
+    "dark grey": "gray",
     "light gray": "gray",
     "dark gray": "gray",
-    "navy blue": "navy",
     "lime green": "green",
     "olive green": "green",
     "bright green": "green",
@@ -93,23 +92,11 @@ NORMALIZATION_MAP = {
     "brow": "brown",
     "bronw": "brown",
     "brone": "brown",
-    "beiege": "beige",
-    "biege": "beige",
-    "siilver": "silver",
-    "sillver": "silver",
-    "sivler": "silver",
-    "sliver": "silver",
-    "torquoise": "turquoise",
-    "turqoise": "turquoise",
 
     # shapes
     "circle": "circular",
     "rectangle": "rectangular",
     "triangle": "triangular",
-    "octagon": "octagonal",
-    "pentagon": "pentagonal",
-    "sphere": "spherical",
-    "cone": "conical",
 }
 
 
@@ -125,41 +112,24 @@ def normalize_text(x: str) -> str:
 
 def normalize_attr(x: str) -> str:
     x = normalize_text(x)
-    if x in NORMALIZATION_MAP:
-        return NORMALIZATION_MAP[x]
-    return x
+    return NORMALIZATION_MAP.get(x, x)
 
 
 def find_colors(attr: str):
-    """
-    Return set of canonical colors found in one attribute string.
-    Exclude multi-color expressions like 'blue and white', 'red, white, and blue'.
-    """
     attr = normalize_attr(attr)
-
-    # explicit multi-color separators -> exclude entirely
-    multi_markers = [" and ", ",", "/", "&"]
-    if any(m in attr for m in multi_markers):
-        matched = set()
-        for c in COLOR_CANONICAL:
-            if re.search(rf"\b{re.escape(c)}\b", attr):
-                matched.add(c)
-        if len(matched) >= 2:
-            return set()
 
     found = set()
     for color in COLOR_CANONICAL:
         if re.search(rf"\b{re.escape(color)}\b", attr):
             found.add(color)
 
+    if len(found) >= 2:
+        return set()
+
     return found
 
 
 def find_shapes(attr: str):
-    """
-    Return set of canonical shapes found in one attribute string.
-    Exclude attributes containing multiple shapes.
-    """
     attr = normalize_attr(attr)
 
     found = set()
@@ -167,23 +137,71 @@ def find_shapes(attr: str):
         if re.search(rf"\b{re.escape(shape)}\b", attr):
             found.add(shape)
 
-    # if a single attribute itself includes multiple shape words, ignore it
     if len(found) >= 2:
         return set()
 
     return found
 
 
+def downsample_by_label(df, label_col, target_per_class=None, random_state=42):
+    """
+    Downsample each class in label_col.
+    - target_per_class=None: use min class size
+    - target_per_class=int: keep at most that many per class
+    """
+    if df.empty:
+        return df.copy()
+
+    counts = df[label_col].value_counts().sort_index()
+
+    if target_per_class is None:
+        n_target = counts.min()
+    else:
+        n_target = target_per_class
+
+    sampled = []
+    for label, group in df.groupby(label_col, group_keys=False):
+        n = min(len(group), n_target)
+        sampled.append(group.sample(n=n, random_state=random_state))
+
+    out = pd.concat(sampled, axis=0).sample(frac=1, random_state=random_state).reset_index(drop=True)
+    return out
+
+
 # ============================================================
 # Main
 # ============================================================
-def build_color_shape_csv(input_csv, out_color_csv, out_shape_csv):
+def build_color_shape_csv(
+    input_csv,
+    out_color_csv,
+    out_shape_csv,
+    min_area=1000,
+    color_target_per_class=None,
+    random_state=42,
+):
     df = pd.read_csv(input_csv)
 
     attr_cols = [c for c in df.columns if c.lower().startswith("attribution")]
     if not attr_cols:
         raise ValueError("No attribution columns found.")
 
+    if "area" not in df.columns:
+        raise ValueError("Input CSV must contain an 'area' column.")
+
+    # 1. exclude small boxes
+    df["area"] = pd.to_numeric(df["area"], errors="coerce")
+    df = df[df["area"] >= min_area].copy()
+
+    # 2. exclude duplicated (image_path, obj)
+    pair_counts = (
+        df.groupby(["image_path", "obj"])
+        .size()
+        .reset_index(name="count")
+    )
+    valid_pairs = pair_counts[pair_counts["count"] == 1][["image_path", "obj"]]
+    df = df.merge(valid_pairs, on=["image_path", "obj"], how="inner")
+
+    # 3. build rows
     color_rows = []
     shape_rows = []
 
@@ -203,37 +221,67 @@ def build_color_shape_csv(input_csv, out_color_csv, out_shape_csv):
             if not val:
                 continue
 
-            colors_here = find_colors(val)
-            shapes_here = find_shapes(val)
+            all_colors.update(find_colors(val))
+            all_shapes.update(find_shapes(val))
 
-            all_colors.update(colors_here)
-            all_shapes.update(shapes_here)
-
-        # keep only if exactly one unique color
         if len(all_colors) == 1:
             color_rows.append({
                 "image_path": image_path,
                 "obj": obj,
-                "color": next(iter(all_colors))
+                "color": next(iter(all_colors)),
             })
 
-        # keep only if exactly one unique shape
         if len(all_shapes) == 1:
             shape_rows.append({
                 "image_path": image_path,
                 "obj": obj,
-                "shape": next(iter(all_shapes))
+                "shape": next(iter(all_shapes)),
             })
 
     color_df = pd.DataFrame(color_rows)
     shape_df = pd.DataFrame(shape_rows)
+    
+    # deduplicate exact rows
+    before_color = len(color_df)
+    before_shape = len(shape_df)
 
+    color_df = color_df.drop_duplicates(subset=["image_path", "obj", "color"]).reset_index(drop=True)
+    shape_df = shape_df.drop_duplicates(subset=["image_path", "obj", "shape"]).reset_index(drop=True)
+
+    print(f"Removed {before_color - len(color_df)} duplicate color rows")
+    print(f"Removed {before_shape - len(shape_df)} duplicate shape rows")
+
+    # 4. downsample only color
+    color_downsampled_df = downsample_by_label(
+        color_df,
+        label_col="color",
+        target_per_class=color_target_per_class,
+        random_state=random_state,
+    )
+
+    # 5. save
     color_df.to_csv(out_color_csv, index=False)
+    color_downsampled_df.to_csv(out_color_csv, index=False)
     shape_df.to_csv(out_shape_csv, index=False)
 
     print(f"Saved color CSV: {out_color_csv} ({len(color_df)} rows)")
-    print(f"Saved shape CSV: {out_shape_csv} ({len(shape_df)} rows)")
+    print("Color counts before downsampling:")
+    print(color_df["color"].value_counts().sort_index())
+
+    print(f"\nSaved downsampled color CSV: {out_color_csv} ({len(color_downsampled_df)} rows)")
+    print("Color counts after downsampling:")
+    print(color_downsampled_df["color"].value_counts().sort_index())
+
+    print(f"\nSaved shape CSV: {out_shape_csv} ({len(shape_df)} rows)")
 
 
 if __name__ == "__main__":
-    build_color_shape_csv(INPUT_CSV, OUT_COLOR_CSV, OUT_SHAPE_CSV)
+    build_color_shape_csv(
+        INPUT_CSV,
+        OUT_COLOR_CSV,
+        OUT_SHAPE_CSV,
+        min_area=1000,
+        color_target_per_class=None,   # None -> smallest class size
+        random_state=42,
+    )
+

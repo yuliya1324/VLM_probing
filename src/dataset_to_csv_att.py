@@ -50,6 +50,15 @@ def _extract_attributes(obj: dict):
             attrs.append(attr.strip())
     return attrs
 
+def _bbox_area(obj: dict):
+    bbox = obj.get("bbox", {})
+    w = bbox.get("w")
+    h = bbox.get("h")
+
+    if w is None or h is None:
+        return ""
+
+    return w * h
 
 # --------------------------------------------------
 # Main CSV creation
@@ -98,6 +107,7 @@ def build_attribute_csv(
             row = {
                 "image_path": str(img_path),
                 "obj": obj_name,
+                "area": _bbox_area(obj)
             }
 
             for i, attr in enumerate(attrs, start=1):
@@ -111,7 +121,7 @@ def build_attribute_csv(
     else:
         num_attr_cols = max_attr_len_found
 
-    fieldnames = ["image_path", "obj"] + [
+    fieldnames = ["image_path", "obj", "area"] + [
         f"attribution{i}" for i in range(1, num_attr_cols + 1)
     ]
 

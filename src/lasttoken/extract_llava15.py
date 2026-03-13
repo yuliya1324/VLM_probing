@@ -206,7 +206,7 @@ def run_csv(
 # =========================
 if __name__ == "__main__":
     PROJECT_ROOT = Path(__file__).resolve().parents[2]
-    csv_path = PROJECT_ROOT / "data" / "vrd_relationships.csv"
+    csv_path = PROJECT_ROOT / "data" / "vrd_csv" / "vrd_spatial.csv"
     save_dir = PROJECT_ROOT / "features" / "LLaVA"
 
     run_csv(

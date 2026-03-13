@@ -13,7 +13,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 ANN_PATH = PROJECT_ROOT / "data" / "raw" / "vrd" / "sg_train_annotations.json"
 IMG_DIR  = PROJECT_ROOT / "data" / "raw" / "vrd" / "sg_train_images"
 
-OUT_CSV  = PROJECT_ROOT / "data" / "vrd_relationships.csv"
+OUT_CSV  = PROJECT_ROOT / "data" / "vrd_csv" / "vrd_spatial.csv"
 
 
 # --------------------------------------------------
@@ -77,6 +77,26 @@ def _downsample_by_relationship(rows, seed=42, max_per_class=None):
 
     return balanced_rows
 
+def _deduplicate_rows(rows):
+    seen = set()
+    deduped = []
+    dup_count = 0
+
+    for row in rows:
+        key = (
+            row["img_path"],
+            row["subj"],
+            row["obj"],
+            row["relationship"],
+        )
+        if key in seen:
+            dup_count += 1
+            continue
+        seen.add(key)
+        deduped.append(row)
+
+    print(f"Removed {dup_count} duplicated rows")
+    return deduped
 
 # --------------------------------------------------
 # Main CSV creation
@@ -117,6 +137,10 @@ def build_relationship_csv(rep=None, downsample=False, max_per_class=None, seed=
                 "obj": obj,
                 "relationship": rel
             })
+            
+    print(f"Before deduplication: {len(rows)} rows")
+    rows = _deduplicate_rows(rows)
+    print(f"After deduplication: {len(rows)} rows")
 
     if downsample:
         rows = _downsample_by_relationship(
