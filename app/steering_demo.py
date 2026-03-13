@@ -64,6 +64,73 @@ PROBE_DIRS = {
         },
 }
 
+DEFAULTS = {
+    ("qwen2", "color"): {
+        "layers": (20, 28),
+        "alpha": 10.0,
+        "when": "all",
+        "strategy": "push",
+    },
+    ("qwen2", "shape"): {
+        "layers": (15, 28),
+        "alpha": 10.0,
+        "when": "all",
+        "strategy": "push",
+    },
+    ("qwen2", "spatial"): {
+        "layers": (15, 28),
+        "alpha": 10.0,
+        "when": "all",
+        "strategy": "push",
+    },
+    ("llava15", "color"): {
+        "layers": (20, 32),
+        "alpha": 3.0,
+        "when": "all",
+        "strategy": "push",
+    },
+    ("llava15", "shape"): {
+        "layers": (15, 32),
+        "alpha": 3.0,
+        "when": "all",
+        "strategy": "push",
+    },
+    ("llava15", "spatial"): {
+        "layers": (15, 32),
+        "alpha": 3.0,
+        "when": "all",
+        "strategy": "push",
+    },
+    ("vila", "color"): {
+        "layers": (24, 30),
+        "alpha": 5.0,
+        "when": "all",
+        "strategy": "push",
+    },
+    ("vila", "shape"): {
+        "layers": (23, 32),
+        "alpha": 5.0,
+        "when": "all",
+        "strategy": "push",
+    },
+    ("vila", "spatial"): {
+        "layers": (25, 30),
+        "alpha": 5.0,
+        "when": "all",
+        "strategy": "push",
+    },
+}
+
+# Fallback if no specific default exists
+DEFAULT_FALLBACK = {
+    "layers": (20, 28),
+    "alpha": 10.0,
+    "when": "all",
+    "strategy": "push",
+}
+
+def get_defaults(model_tag: str, task: str) -> dict:
+    return DEFAULTS.get((model_tag, task), DEFAULT_FALLBACK)
 
 # ============================================================
 # Model loading (cached so it only loads once)
@@ -114,10 +181,6 @@ def main():
             help="Leave blank to use the default model for this tag",
         )
         model_id = model_id.strip() or None
-
-        # st.divider()
-        # st.header("Probe directories")
-        # st.caption("Point to the `probes/` folders from training.")
 
         probe_dirs = PROBE_DIRS[model_tag]
 
@@ -211,15 +274,23 @@ def main():
 
         target_class = st.selectbox("Target class", options=classes)
 
+        # Get defaults for this model+task combo
+        defs = get_defaults(model_tag, task)
+
         # Strategy
-        strategy = st.radio("Strategy", ["push", "contrast"], horizontal=True)
+        strategy_options = ["push", "contrast"]
+        strategy = st.radio("Strategy", strategy_options, index=strategy_options.index(defs["strategy"]), horizontal=True)
         source_class = None
         if strategy == "contrast":
             source_options = [c for c in classes if c != target_class]
             source_class = st.selectbox("Source class (steer away from)", options=source_options)
 
         # Layer selection
-        layer_mode = st.radio("Layers", ["Best layer", "Single layer", "Layer range"], horizontal=True)
+        def_l_start, def_l_end = defs["layers"]
+        def_l_start = max(1, min(def_l_start, n_layers - 1))
+        def_l_end = max(1, min(def_l_end, n_layers - 1))
+
+        layer_mode = st.radio("Layers", ["Best layer", "Single layer", "Layer range"], index=2, horizontal=True)
         if layer_mode == "Best layer":
             layers = [best_layer]
             st.caption(f"Using best layer: {best_layer}")
@@ -227,12 +298,13 @@ def main():
             layer = st.slider("Layer", 1, n_layers - 1, best_layer)
             layers = [layer]
         else:
-            l_start, l_end = st.slider("Layer range", 1, n_layers - 1, (best_layer - 3, best_layer + 3))
+            l_start, l_end = st.slider("Layer range", 1, n_layers - 1,
+                                       (def_l_start, def_l_end))
             layers = list(range(l_start, l_end + 1))
             st.caption(f"Steering on layers: {layers}")
 
         # Alpha
-        alpha = st.slider("α (steering strength)", 0.0, 100.0, 10.0, step=0.5)
+        alpha = st.slider("α (steering strength)", 0.0, 100.0, defs["alpha"], step=0.5)
 
         # When
         when = st.radio("Intervention timing", ["all", "prefill"], horizontal=True,

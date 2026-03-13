@@ -27,6 +27,8 @@ import sys
 from pathlib import Path
 from collections import defaultdict
 
+from tqdm import tqdm
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import torch
@@ -83,13 +85,11 @@ def parse_response(response: str, task: str) -> dict:
     if matched_label and matched_label in LABEL_NORMALIZE:
         matched_label = LABEL_NORMALIZE[matched_label]
 
-    is_coherent = matched_label is not None
-    is_gibberish = len(clean) > 100 or len(set(clean.split())) <= 1
+    is_gibberish = len(clean) > 10 and len(set(clean.split())) <= 3
 
     return {
         "raw": raw,
         "parsed_label": matched_label,
-        "is_coherent": is_coherent,
         "is_gibberish": is_gibberish,
     }
 
@@ -129,7 +129,7 @@ def evaluate_steering(
             "steer_toward_gt_correct": 0,
             "steer_away_correct": 0,       # still correct despite wrong steering
             "steer_away_hit_target": 0,     # response matches the wrong steered class
-            "coherent": 0,
+            # "coherent": 0,
             "gibberish": 0,
             "total": 0,
             "per_class_hit": defaultdict(int),
@@ -162,7 +162,7 @@ def evaluate_steering(
                     stats["baseline_correct"] += int(baseline_correct)
                     stats["steer_toward_gt_correct"] += int(baseline_correct)
                     stats["steer_away_correct"] += int(baseline_correct)
-                    stats["coherent"] += int(baseline_parsed["is_coherent"])
+                    # stats["coherent"] += int(baseline_parsed["is_coherent"])
                     stats["gibberish"] += int(baseline_parsed["is_gibberish"])
                 else:
                     # --- Steer toward GT ---
@@ -186,7 +186,7 @@ def evaluate_steering(
                     wrong_norm = LABEL_NORMALIZE.get(wrong_class, wrong_class)
                     stats["steer_away_correct"] += int(away_parsed["parsed_label"] == gt_norm)
                     stats["steer_away_hit_target"] += int(away_parsed["parsed_label"] == wrong_norm)
-                    stats["coherent"] += int(away_parsed["is_coherent"])
+                    # stats["coherent"] += int(away_parsed["is_coherent"])
                     stats["gibberish"] += int(away_parsed["is_gibberish"])
 
                     stats["baseline_correct"] += int(baseline_correct)
@@ -212,7 +212,7 @@ def evaluate_steering(
             "steer_toward_gt_accuracy": stats["steer_toward_gt_correct"] / total,
             "steer_away_accuracy": stats["steer_away_correct"] / total,
             "steer_away_target_hit_rate": stats["steer_away_hit_target"] / total,
-            "coherence_rate": stats["coherent"] / total,
+            # "coherence_rate": stats["coherent"] / total,
             "gibberish_rate": stats["gibberish"] / total,
             "per_class_hit_rate": {
                 cls: stats["per_class_hit"][cls] / max(stats["per_class_total"][cls], 1)
@@ -225,7 +225,7 @@ def evaluate_steering(
         print(f"  Steer→GT acc:        {r['steer_toward_gt_accuracy']:.3f}")
         print(f"  Steer→wrong acc:     {r['steer_away_accuracy']:.3f}")
         print(f"  Steer→wrong hit:     {r['steer_away_target_hit_rate']:.3f}")
-        print(f"  Coherence:           {r['coherence_rate']:.3f}")
+        # print(f"  Coherence:           {r['coherence_rate']:.3f}")
         print(f"  Gibberish:           {r['gibberish_rate']:.3f}")
 
     return {
@@ -250,7 +250,6 @@ def plot_steering_eval(results: dict, output_path: str = None):
     toward_gt = []
     away_acc = []
     away_hit = []
-    coherence = []
     gibberish = []
 
     for alpha, r in sorted(results["results_by_alpha"].items(), key=lambda x: x[0]):
@@ -259,16 +258,16 @@ def plot_steering_eval(results: dict, output_path: str = None):
         toward_gt.append(r["steer_toward_gt_accuracy"])
         away_acc.append(r["steer_away_accuracy"])
         away_hit.append(r["steer_away_target_hit_rate"])
-        coherence.append(r["coherence_rate"])
         gibberish.append(r["gibberish_rate"])
 
-    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+    fig, axes = plt.subplots(1, 2, figsize=(18, 5))
 
     # Panel 1: Accuracy
     ax = axes[0]
     ax.plot(alphas, baseline, "k--", marker="o", markersize=4, label="Baseline", alpha=0.5)
     ax.plot(alphas, toward_gt, "g-", marker="s", markersize=4, label="Steer → GT")
     ax.plot(alphas, away_acc, "r-", marker="^", markersize=4, label="Steer → wrong (still correct)")
+    ax.plot(alphas, away_hit, "m-", marker="D", markersize=4, label="Steer → wrong (target hit rate)")
     ax.set_xlabel("α")
     ax.set_ylabel("Accuracy")
     ax.set_title("Steering Effect on Accuracy")
@@ -276,19 +275,18 @@ def plot_steering_eval(results: dict, output_path: str = None):
     ax.grid(alpha=0.3)
     ax.set_ylim(-0.05, 1.05)
 
-    # Panel 2: Target hit rate
-    ax = axes[1]
-    ax.plot(alphas, away_hit, "m-", marker="D", markersize=4, label="Steer → wrong: target hit rate")
-    ax.set_xlabel("α")
-    ax.set_ylabel("Hit Rate")
-    ax.set_title("Does Steering Change the Response?")
-    ax.legend()
-    ax.grid(alpha=0.3)
-    ax.set_ylim(-0.05, 1.05)
+    # # Panel 2: Target hit rate
+    # ax = axes[1]
+    # ax.plot(alphas, away_hit, "m-", marker="D", markersize=4, label="Steer → wrong: target hit rate")
+    # ax.set_xlabel("α")
+    # ax.set_ylabel("Hit Rate")
+    # ax.set_title("Does Steering Change the Response?")
+    # ax.legend()
+    # ax.grid(alpha=0.3)
+    # ax.set_ylim(-0.05, 1.05)
 
     # Panel 3: Coherence / gibberish
-    ax = axes[2]
-    ax.plot(alphas, coherence, "b-", marker="o", markersize=4, label="Coherent (valid label)")
+    ax = axes[1]
     ax.plot(alphas, gibberish, "r--", marker="x", markersize=4, label="Gibberish")
     ax.set_xlabel("α")
     ax.set_ylabel("Rate")
@@ -319,7 +317,7 @@ def main():
     parser.add_argument("--model_tag", type=str, required=True)
     parser.add_argument("--model_id", type=str, default=None)
     parser.add_argument("--layers", type=int, nargs="+", required=True)
-    parser.add_argument("--alphas", type=float, nargs="+", default=[0, 1, 2, 5, 10, 20, 50])
+    parser.add_argument("--alphas", type=float, nargs="+", default=[1, 3, 5, 8, 10])
     parser.add_argument("--when", type=str, default="all", choices=["all", "prefill"])
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--max_new_tokens", type=int, default=50)
