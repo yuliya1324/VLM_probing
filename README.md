@@ -223,3 +223,30 @@ python scripts/extract_and_probe.py \
     --output_dir results/vrd_color/qwen2/correct \
     --skip_extraction;
 ```
+
+## Evaluate Mixed Probe and Correct Probe on VRD
+```bash
+python scripts/evaluate.py \
+    --probes_dir results/vrd_spatial/qwen2/correct/probes \
+    --representations results/vrd_spatial/qwen2/representations.npz \
+    --split all \
+    --output results/vrd_spatial/qwen2/correct/eval_on_full_vrd.png
+
+python scripts/make_mixed_npz.py \
+    --vrd results/vrd_spatial/qwen2/correct/representations.npz \
+    --synthetic results/spatial/qwen2/representations.npz \
+    --output results/vrd_spatial/qwen2/mixed/representations.npz
+
+python scripts/extract_and_probe.py \
+    --task spatial \
+    --model_tag qwen2 \
+    --output_dir results/vrd_spatial/qwen2/mixed \
+    --skip_extraction \
+    --representations_path results/vrd_spatial/qwen2/mixed/representations.npz
+
+python scripts/evaluate.py \
+    --probes_dir results/vrd_spatial/qwen2/mixed/probes \
+    --representations results/vrd_spatial/qwen2/representations.npz \
+    --split all \
+    --output results/vrd_spatial/qwen2/mixed/eval_on_full_vrd.png
+```
