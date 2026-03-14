@@ -104,7 +104,13 @@ def train_probes(
 
         y_pred = probe.predict(X_val)
         acc = accuracy_score(y_val, y_pred)
-        report = classification_report(y_val, y_pred, target_names=class_names)
+        report = classification_report(
+            y_val,
+            y_pred,
+            labels=np.arange(len(class_names)),
+            target_names=class_names,
+            zero_division=0,
+        )
 
         results[layer_idx] = {
             "accuracy": float(acc),

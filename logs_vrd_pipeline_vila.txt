@@ -1,0 +1,3892 @@
+=============================
+Fri Mar 13 09:34:44 PM CET 2026
+Starting VRD pipeline for model: vila
+=============================
+Removing old file: results/vrd_shape/vila/representations.npz
+Removing old chunk directory: results/vrd_shape/vila/representations_chunks
+
+>>> RUN: python scripts/extract_vrd.py --task shape --model_tag vila
+Task       : shape
+Model tag  : vila
+CSV path   : /Data/masayo.tomita/VLM_probing/data/vrd_csv/vrd_shape.csv
+Output path: /Data/masayo.tomita/VLM_probing/results/vrd_shape/vila/representations.npz
+Loading model: a8cheng/SpatialRGPT-VILA1.5-8B
+Warning: The cache directory for DeepSpeed Triton autotune, /users/eleves-b/2025/masayo.tomita/.triton/autotune, appears to be on an NFS system. While this is generally acceptable, if you experience slowdowns or hanging when DeepSpeed exits, it is recommended to set the TRITON_CACHE_DIR environment variable to a non-NFS path.
+PS3 is not installed. Please install it using the following command:
+pip install ps3
+Fetching 20 files:   0%|          | 0/20 [00:00<?, ?it/s]Fetching 20 files:   5%|▌         | 1/20 [00:00<00:02,  6.38it/s]Fetching 20 files:  20%|██        | 4/20 [01:54<07:36, 28.52s/it]
+Traceback (most recent call last):
+  File "/Data/masayo.tomita/VLM_probing/scripts/extract_vrd.py", line 284, in <module>
+    main()
+  File "/Data/masayo.tomita/VLM_probing/scripts/extract_vrd.py", line 233, in main
+    model, processor = registry_entry["loader"](model_id)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Data/masayo.tomita/VLM_probing/src/extraction/extract.py", line 138, in load_vila
+    tokenizer, model, image_processor, context_len = load_pretrained_model(
+                                                     ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Data/masayo.tomita/VLM_probing/VILA/llava/model/builder.py", line 118, in load_pretrained_model
+    model = LlavaLlamaModel(config=config, low_cpu_mem_usage=True, **kwargs)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Data/masayo.tomita/VLM_probing/VILA/llava/model/language_model/llava_llama.py", line 49, in __init__
+    self.init_vlm(config=config, *args, **kwargs)
+  File "/Data/masayo.tomita/VLM_probing/VILA/llava/model/llava_arch.py", line 67, in init_vlm
+    cfgs = get_model_config(config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Data/masayo.tomita/VLM_probing/VILA/llava/model/utils/utils.py", line 40, in get_model_config
+    root_path = snapshot_download(root_path)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Data/masayo.tomita/VLM_probing/venv-extract/lib/python3.11/site-packages/huggingface_hub/utils/_validators.py", line 114, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Data/masayo.tomita/VLM_probing/venv-extract/lib/python3.11/site-packages/huggingface_hub/_snapshot_download.py", line 332, in snapshot_download
+    thread_map(
+  File "/Data/masayo.tomita/VLM_probing/venv-extract/lib/python3.11/site-packages/tqdm/contrib/concurrent.py", line 69, in thread_map
+    return _executor_map(ThreadPoolExecutor, fn, *iterables, **tqdm_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Data/masayo.tomita/VLM_probing/venv-extract/lib/python3.11/site-packages/tqdm/contrib/concurrent.py", line 51, in _executor_map
+    return list(tqdm_class(ex.map(fn, *iterables, chunksize=chunksize), **kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Data/masayo.tomita/VLM_probing/venv-extract/lib/python3.11/site-packages/tqdm/std.py", line 1181, in __iter__
+    for obj in iterable:
+  File "/users/eleves-b/2025/masayo.tomita/.local/share/uv/python/cpython-3.11.14-linux-x86_64-gnu/lib/python3.11/concurrent/futures/_base.py", line 619, in result_iterator
+    yield _result_or_cancel(fs.pop())
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/users/eleves-b/2025/masayo.tomita/.local/share/uv/python/cpython-3.11.14-linux-x86_64-gnu/lib/python3.11/concurrent/futures/_base.py", line 317, in _result_or_cancel
+    return fut.result(timeout)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/users/eleves-b/2025/masayo.tomita/.local/share/uv/python/cpython-3.11.14-linux-x86_64-gnu/lib/python3.11/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/users/eleves-b/2025/masayo.tomita/.local/share/uv/python/cpython-3.11.14-linux-x86_64-gnu/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/users/eleves-b/2025/masayo.tomita/.local/share/uv/python/cpython-3.11.14-linux-x86_64-gnu/lib/python3.11/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Data/masayo.tomita/VLM_probing/venv-extract/lib/python3.11/site-packages/huggingface_hub/_snapshot_download.py", line 306, in _inner_hf_hub_download
+    return hf_hub_download(
+           ^^^^^^^^^^^^^^^^
+  File "/Data/masayo.tomita/VLM_probing/venv-extract/lib/python3.11/site-packages/huggingface_hub/utils/_validators.py", line 114, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/Data/masayo.tomita/VLM_probing/venv-extract/lib/python3.11/site-packages/huggingface_hub/file_download.py", line 1014, in hf_hub_download
+    return _hf_hub_download_to_cache_dir(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Data/masayo.tomita/VLM_probing/venv-extract/lib/python3.11/site-packages/huggingface_hub/file_download.py", line 1175, in _hf_hub_download_to_cache_dir
+    _download_to_tmp_and_move(
+  File "/Data/masayo.tomita/VLM_probing/venv-extract/lib/python3.11/site-packages/huggingface_hub/file_download.py", line 1727, in _download_to_tmp_and_move
+    xet_get(
+  File "/Data/masayo.tomita/VLM_probing/venv-extract/lib/python3.11/site-packages/huggingface_hub/file_download.py", line 633, in xet_get
+    download_files(
+RuntimeError: Data processing error: CAS service error : IO Error: Disk quota exceeded (os error 122)
+=============================
+Fri Mar 13 09:44:38 PM CET 2026
+Starting VRD pipeline for model: vila
+=============================
+
+>>> RUN: python scripts/extract_vrd.py --task shape --model_tag vila
+Task       : shape
+Model tag  : vila
+CSV path   : /Data/masayo.tomita/VLM_probing/data/vrd_csv/vrd_shape.csv
+Output path: /Data/masayo.tomita/VLM_probing/results/vrd_shape/vila/representations.npz
+Loading model: a8cheng/SpatialRGPT-VILA1.5-8B
+Warning: The cache directory for DeepSpeed Triton autotune, /users/eleves-b/2025/masayo.tomita/.triton/autotune, appears to be on an NFS system. While this is generally acceptable, if you experience slowdowns or hanging when DeepSpeed exits, it is recommended to set the TRITON_CACHE_DIR environment variable to a non-NFS path.
+PS3 is not installed. Please install it using the following command:
+pip install ps3
+Fetching 20 files:   0%|          | 0/20 [00:00<?, ?it/s]Fetching 20 files:   5%|▌         | 1/20 [00:00<00:06,  2.80it/s]Fetching 20 files:  25%|██▌       | 5/20 [02:39<08:30, 34.01s/it]Fetching 20 files:  35%|███▌      | 7/20 [02:45<04:47, 22.14s/it]Fetching 20 files: 100%|██████████| 20/20 [02:45<00:00,  8.26s/it]
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:43<02:10, 43.42s/it]Loading checkpoint shards:  50%|█████     | 2/4 [01:27<01:27, 43.56s/it]Loading checkpoint shards:  75%|███████▌  | 3/4 [02:09<00:43, 43.06s/it]Loading checkpoint shards: 100%|██████████| 4/4 [02:19<00:00, 30.09s/it]Loading checkpoint shards: 100%|██████████| 4/4 [02:19<00:00, 34.94s/it]
+Some parameters are on the meta device because they were offloaded to the cpu.
+Saved chunk: /Data/masayo.tomita/VLM_probing/results/vrd_shape/vila/representations_chunks/chunk_00000.npz (200, 33, 4096)
+[200/1254] extracted
+Saved chunk: /Data/masayo.tomita/VLM_probing/results/vrd_shape/vila/representations_chunks/chunk_00001.npz (200, 33, 4096)
+[400/1254] extracted
+Saved chunk: /Data/masayo.tomita/VLM_probing/results/vrd_shape/vila/representations_chunks/chunk_00002.npz (200, 33, 4096)
+[600/1254] extracted
+Saved chunk: /Data/masayo.tomita/VLM_probing/results/vrd_shape/vila/representations_chunks/chunk_00003.npz (200, 33, 4096)
+[800/1254] extracted
+Saved chunk: /Data/masayo.tomita/VLM_probing/results/vrd_shape/vila/representations_chunks/chunk_00004.npz (200, 33, 4096)
+[1000/1254] extracted
+Saved chunk: /Data/masayo.tomita/VLM_probing/results/vrd_shape/vila/representations_chunks/chunk_00005.npz (200, 33, 4096)
+[1200/1254] extracted
+[1254/1254] extracted
+Saved chunk: /Data/masayo.tomita/VLM_probing/results/vrd_shape/vila/representations_chunks/chunk_00006.npz (54, 33, 4096)
+
+Merged and saved final file: /Data/masayo.tomita/VLM_probing/results/vrd_shape/vila/representations.npz
+Final shape: (1254, 33, 4096)
+1254 samples saved
+
+>>> RUN: python scripts/evaluate_vrd_raw.py --task shape --model_tag vila --max_new_tokens 4 --resume
+usage: evaluate_vrd_raw.py [-h] --task {spatial,color,shape} --model_tag
+                           {qwen2,llava15} [--model_id MODEL_ID]
+                           [--csv_path CSV_PATH] [--output_csv OUTPUT_CSV]
+                           [--limit LIMIT] [--max_new_tokens MAX_NEW_TOKENS]
+                           [--save_every SAVE_EVERY] [--resume]
+evaluate_vrd_raw.py: error: argument --model_tag: invalid choice: 'vila' (choose from 'qwen2', 'llava15')
+=============================
+Fri Mar 13 10:19:39 PM CET 2026
+Starting VRD pipeline for model: vila
+=============================
+
+>>> RUN: python scripts/evaluate_vrd_raw.py --task color --model_tag vila --max_new_tokens 4
+Task       : color
+Model tag  : vila
+CSV path   : /Data/masayo.tomita/VLM_probing/data/vrd_csv/vrd_color.csv
+Output CSV : /Data/masayo.tomita/VLM_probing/results/vrd_color/vila/raw_response_predictions.csv
+Loading model: a8cheng/SpatialRGPT-VILA1.5-8B
+Warning: The cache directory for DeepSpeed Triton autotune, /users/eleves-b/2025/masayo.tomita/.triton/autotune, appears to be on an NFS system. While this is generally acceptable, if you experience slowdowns or hanging when DeepSpeed exits, it is recommended to set the TRITON_CACHE_DIR environment variable to a non-NFS path.
+PS3 is not installed. Please install it using the following command:
+pip install ps3
+Fetching 20 files:   0%|          | 0/20 [00:00<?, ?it/s]Fetching 20 files: 100%|██████████| 20/20 [00:00<00:00, 66788.28it/s]
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:01<00:03,  1.13s/it]Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:02,  1.14s/it]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:02<00:00,  1.07it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.47it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.23it/s]
+Some parameters are on the meta device because they were offloaded to the cpu.
+Generating:   0%|          | 0/2244 [00:00<?, ?it/s]Generating:   1%|          | 16/2244 [00:00<00:14, 158.06it/s]Generating:   1%|▏         | 33/2244 [00:00<00:13, 158.99it/s]Generating:   2%|▏         | 51/2244 [00:00<00:13, 165.01it/s]
+[0] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[1] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[2] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[3] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[4] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[5] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[6] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[7] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[8] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[9] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[10] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[11] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[12] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[13] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[14] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[15] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[16] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[17] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[18] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[19] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[20] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[21] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[22] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[23] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[24] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[25] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[26] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[27] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[28] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[29] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[30] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[31] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[32] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[33] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[34] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[35] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[36] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[37] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[38] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[39] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[40] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[41] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[42] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[43] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[44] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[45] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[46] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[47] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[48] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[49] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[50] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[51] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[52] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[53] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[54] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[55] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[56] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skippingGenerating:   3%|▎         | 69/2244 [00:00<00:12, 169.08it/s]Generating:   4%|▍         | 87/2244 [00:00<00:12, 172.60it/s]Generating:   5%|▍         | 106/2244 [00:00<00:11, 178.32it/s]
+
+[57] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[58] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[59] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[60] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[61] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[62] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[63] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[64] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[65] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[66] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[67] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[68] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[69] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[70] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[71] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[72] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[73] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[74] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[75] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[76] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[77] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[78] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[79] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[80] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[81] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[82] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[83] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[84] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[85] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[86] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[87] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[88] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[89] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[90] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[91] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[92] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[93] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[94] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[95] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[96] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[97] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[98] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[99] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[100] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[101] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[102] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[103] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[104] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[105] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[106] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[107] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[108] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[109] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[110] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[111] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[112] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[113] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skippingGenerating:   6%|▌         | 124/2244 [00:00<00:12, 175.42it/s]Generating:   6%|▋         | 143/2244 [00:00<00:11, 179.25it/s]Generating:   7%|▋         | 161/2244 [00:00<00:11, 178.81it/s]
+
+[114] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[115] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[116] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[117] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[118] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[119] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[120] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[121] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[122] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[123] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[124] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[125] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[126] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[127] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[128] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[129] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[130] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[131] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[132] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[133] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[134] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[135] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[136] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[137] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[138] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[139] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[140] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[141] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[142] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[143] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[144] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[145] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[146] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[147] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[148] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[149] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[150] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[151] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[152] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[153] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[154] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[155] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[156] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[157] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[158] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[159] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[160] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[161] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[162] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[163] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[164] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[165] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[166] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[167] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[168] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[169] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skippingGenerating:   8%|▊         | 179/2244 [00:01<00:11, 178.28it/s]Generating:   9%|▉         | 197/2244 [00:01<00:11, 178.42it/s]Generating:  10%|▉         | 216/2244 [00:01<00:11, 179.08it/s]
+
+[170] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[171] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[172] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[173] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[174] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[175] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[176] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[177] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[178] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[179] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[180] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[181] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[182] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[183] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[184] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[185] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[186] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[187] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[188] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[189] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[190] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[191] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[192] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[193] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[194] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[195] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[196] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[197] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[198] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[199] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[200] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[201] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[202] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[203] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[204] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[205] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[206] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[207] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[208] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[209] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[210] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[211] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[212] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[213] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[214] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[215] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[216] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[217] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[218] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[219] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[220] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[221] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[222] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[223] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[224] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[225] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skippingGenerating:  10%|█         | 234/2244 [00:01<00:11, 176.60it/s]Generating:  11%|█         | 252/2244 [00:01<00:11, 169.87it/s]Generating:  12%|█▏        | 270/2244 [00:01<00:11, 172.37it/s]
+
+[226] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[227] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[228] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[229] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[230] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[231] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[232] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[233] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[234] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[235] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[236] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[237] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[238] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[239] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[240] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[241] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[242] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[243] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[244] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[245] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[246] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[247] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[248] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[249] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[250] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[251] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[252] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[253] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[254] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[255] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[256] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[257] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[258] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[259] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[260] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[261] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[262] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[263] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[264] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[265] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[266] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[267] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[268] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[269] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[270] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[271] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[272] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[273] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[274] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[275] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[276] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[277] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[278] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[279] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[280] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[281] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skippingGenerating:  13%|█▎        | 290/2244 [00:01<00:10, 178.37it/s]Generating:  14%|█▎        | 308/2244 [00:01<00:11, 175.72it/s]Generating:  15%|█▍        | 326/2244 [00:01<00:11, 171.78it/s]
+
+[282] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[283] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[284] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[285] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[286] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[287] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[288] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[289] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[290] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[291] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[292] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[293] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[294] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[295] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[296] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[297] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[298] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[299] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[300] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[301] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[302] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[303] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[304] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[305] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[306] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[307] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[308] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[309] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[310] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[311] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[312] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[313] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[314] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[315] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[316] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[317] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[318] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[319] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[320] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[321] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[322] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[323] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[324] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[325] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[326] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[327] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[328] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[329] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[330] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[331] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[332] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[333] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[334] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[335] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[336] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[337] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skippingGenerating:  15%|█▌        | 344/2244 [00:01<00:11, 168.95it/s]Generating:  16%|█▌        | 362/2244 [00:02<00:11, 170.62it/s]Generating:  17%|█▋        | 381/2244 [00:02<00:10, 174.31it/s]
+
+[338] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[339] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[340] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[341] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[342] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[343] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[344] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[345] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[346] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[347] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[348] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[349] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[350] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[351] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[352] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[353] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[354] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[355] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[356] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[357] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[358] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[359] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[360] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[361] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[362] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[363] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[364] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[365] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[366] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[367] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[368] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[369] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[370] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[371] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[372] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[373] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[374] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[375] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[376] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[377] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[378] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[379] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[380] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[381] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[382] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[383] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[384] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[385] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[386] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[387] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[388] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[389] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[390] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[391] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[392] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[393] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skippingGenerating:  18%|█▊        | 399/2244 [00:02<00:10, 173.24it/s]Generating:  19%|█▊        | 418/2244 [00:02<00:10, 176.23it/s]Generating:  19%|█▉        | 436/2244 [00:02<00:10, 173.95it/s]
+
+[394] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[395] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[396] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[397] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[398] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[399] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[400] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[401] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[402] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[403] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[404] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[405] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[406] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[407] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[408] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[409] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[410] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[411] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[412] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[413] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[414] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[415] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[416] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[417] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[418] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[419] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[420] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[421] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[422] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[423] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[424] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[425] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[426] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[427] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[428] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[429] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[430] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[431] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[432] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[433] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[434] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[435] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[436] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[437] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[438] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[439] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[440] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[441] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[442] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[443] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[444] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[445] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[446] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[447] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[448] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skipping
+
+[449] error: cannot import name 'IMAGE_TOKEN_INDEX' from 'llava.constants' (/Data/masayo.tomita/VLM_probing/VILA/llava/constants.py) — skippingGenerating:  20%|██        | 454/2244 [00:02<00:10, 173.44it/s]Generating:  21%|██        | 472/2244 [00:02<00:10, 171.16it/s]Generating:  22%|██▏       | 491/2244 [00:02<00:09, 175.49it/s]=============================
+Fri Mar 13 10:22:02 PM CET 2026
+Starting VRD pipeline for model: vila
+=============================
+
+>>> RUN: python scripts/evaluate_vrd_raw.py --task color --model_tag vila --max_new_tokens 4
+Task       : color
+Model tag  : vila
+CSV path   : /Data/masayo.tomita/VLM_probing/data/vrd_csv/vrd_color.csv
+Output CSV : /Data/masayo.tomita/VLM_probing/results/vrd_color/vila/raw_response_predictions.csv
+Loading model: a8cheng/SpatialRGPT-VILA1.5-8B
+Warning: The cache directory for DeepSpeed Triton autotune, /users/eleves-b/2025/masayo.tomita/.triton/autotune, appears to be on an NFS system. While this is generally acceptable, if you experience slowdowns or hanging when DeepSpeed exits, it is recommended to set the TRITON_CACHE_DIR environment variable to a non-NFS path.
+PS3 is not installed. Please install it using the following command:
+pip install ps3
+Fetching 20 files:   0%|          | 0/20 [00:00<?, ?it/s]Fetching 20 files: 100%|██████████| 20/20 [00:00<00:00, 29704.70it/s]
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:01<00:03,  1.14s/it]Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:02,  1.14s/it]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:02<00:00,  1.07it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.49it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.24it/s]
+Some parameters are on the meta device because they were offloaded to the cpu.
+Generating:   0%|          | 0/2244 [00:00<?, ?it/s]Generating:   0%|          | 5/2244 [00:00<00:50, 44.77it/s]Generating:   1%|          | 12/2244 [00:00<00:39, 57.10it/s]Generating:   1%|          | 19/2244 [00:00<00:35, 62.48it/s]Generating:   1%|          | 27/2244 [00:00<00:33, 65.75it/s]Generating:   2%|▏         | 34/2244 [00:00<00:34, 64.54it/s]Generating:   2%|▏         | 41/2244 [00:00<00:34, 64.03it/s]Generating:   2%|▏         | 48/2244 [00:00<00:34, 64.10it/s]Generating:   2%|▏         | 55/2244 [00:00<00:33, 65.73it/s]Generating:   3%|▎         | 62/2244 [00:00<00:32, 66.33it/s]Generating:   3%|▎         | 69/2244 [00:01<00:32, 66.67it/s]Generating:   3%|▎         | 76/2244 [00:01<00:32, 67.41it/s]Generating:   4%|▎         | 83/2244 [00:01<00:32, 67.21it/s]Generating:   4%|▍         | 91/2244 [00:01<00:30, 69.94it/s]Generating:   4%|▍         | 98/2244 [00:01<00:31, 68.69it/s]Generating:   5%|▍         | 106/2244 [00:01<00:31, 68.91it/s]Generating:   5%|▌         | 113/2244 [00:01<00:31, 68.30it/s]Generating:   5%|▌         | 120/2244 [00:01<00:31, 66.62it/s]Generating:   6%|▌         | 127/2244 [00:01<00:31, 67.18it/s]Generating:   6%|▌         | 134/2244 [00:02<00:31, 67.63it/s]
+[0] error: 'NoneType' object is not iterable — skipping
+
+[1] error: 'NoneType' object is not iterable — skipping
+
+[2] error: 'NoneType' object is not iterable — skipping
+
+[3] error: 'NoneType' object is not iterable — skipping
+
+[4] error: 'NoneType' object is not iterable — skipping
+
+[5] error: 'NoneType' object is not iterable — skipping
+
+[6] error: 'NoneType' object is not iterable — skipping
+
+[7] error: 'NoneType' object is not iterable — skipping
+
+[8] error: 'NoneType' object is not iterable — skipping
+
+[9] error: 'NoneType' object is not iterable — skipping
+
+[10] error: 'NoneType' object is not iterable — skipping
+
+[11] error: 'NoneType' object is not iterable — skipping
+
+[12] error: 'NoneType' object is not iterable — skipping
+
+[13] error: 'NoneType' object is not iterable — skipping
+
+[14] error: 'NoneType' object is not iterable — skipping
+
+[15] error: 'NoneType' object is not iterable — skipping
+
+[16] error: 'NoneType' object is not iterable — skipping
+
+[17] error: 'NoneType' object is not iterable — skipping
+
+[18] error: 'NoneType' object is not iterable — skipping
+
+[19] error: 'NoneType' object is not iterable — skipping
+
+[20] error: 'NoneType' object is not iterable — skipping
+
+[21] error: 'NoneType' object is not iterable — skipping
+
+[22] error: 'NoneType' object is not iterable — skipping
+
+[23] error: 'NoneType' object is not iterable — skipping
+
+[24] error: 'NoneType' object is not iterable — skipping
+
+[25] error: 'NoneType' object is not iterable — skipping
+
+[26] error: 'NoneType' object is not iterable — skipping
+
+[27] error: 'NoneType' object is not iterable — skipping
+
+[28] error: 'NoneType' object is not iterable — skipping
+
+[29] error: 'NoneType' object is not iterable — skipping
+
+[30] error: 'NoneType' object is not iterable — skipping
+
+[31] error: 'NoneType' object is not iterable — skipping
+
+[32] error: 'NoneType' object is not iterable — skipping
+
+[33] error: 'NoneType' object is not iterable — skipping
+
+[34] error: 'NoneType' object is not iterable — skipping
+
+[35] error: 'NoneType' object is not iterable — skipping
+
+[36] error: 'NoneType' object is not iterable — skipping
+
+[37] error: 'NoneType' object is not iterable — skipping
+
+[38] error: 'NoneType' object is not iterable — skipping
+
+[39] error: 'NoneType' object is not iterable — skipping
+
+[40] error: 'NoneType' object is not iterable — skipping
+
+[41] error: 'NoneType' object is not iterable — skipping
+
+[42] error: 'NoneType' object is not iterable — skipping
+
+[43] error: 'NoneType' object is not iterable — skipping
+
+[44] error: 'NoneType' object is not iterable — skipping
+
+[45] error: 'NoneType' object is not iterable — skipping
+
+[46] error: 'NoneType' object is not iterable — skipping
+
+[47] error: 'NoneType' object is not iterable — skipping
+
+[48] error: 'NoneType' object is not iterable — skipping
+
+[49] error: 'NoneType' object is not iterable — skipping
+
+[50] error: 'NoneType' object is not iterable — skipping
+
+[51] error: 'NoneType' object is not iterable — skipping
+
+[52] error: 'NoneType' object is not iterable — skipping
+
+[53] error: 'NoneType' object is not iterable — skipping
+
+[54] error: 'NoneType' object is not iterable — skipping
+
+[55] error: 'NoneType' object is not iterable — skipping
+
+[56] error: 'NoneType' object is not iterable — skipping
+
+[57] error: 'NoneType' object is not iterable — skipping
+
+[58] error: 'NoneType' object is not iterable — skipping
+
+[59] error: 'NoneType' object is not iterable — skipping
+
+[60] error: 'NoneType' object is not iterable — skipping
+
+[61] error: 'NoneType' object is not iterable — skipping
+
+[62] error: 'NoneType' object is not iterable — skipping
+
+[63] error: 'NoneType' object is not iterable — skipping
+
+[64] error: 'NoneType' object is not iterable — skipping
+
+[65] error: 'NoneType' object is not iterable — skipping
+
+[66] error: 'NoneType' object is not iterable — skipping
+
+[67] error: 'NoneType' object is not iterable — skipping
+
+[68] error: 'NoneType' object is not iterable — skipping
+
+[69] error: 'NoneType' object is not iterable — skipping
+
+[70] error: 'NoneType' object is not iterable — skipping
+
+[71] error: 'NoneType' object is not iterable — skipping
+
+[72] error: 'NoneType' object is not iterable — skipping
+
+[73] error: 'NoneType' object is not iterable — skipping
+
+[74] error: 'NoneType' object is not iterable — skipping
+
+[75] error: 'NoneType' object is not iterable — skipping
+
+[76] error: 'NoneType' object is not iterable — skipping
+
+[77] error: 'NoneType' object is not iterable — skipping
+
+[78] error: 'NoneType' object is not iterable — skipping
+
+[79] error: 'NoneType' object is not iterable — skipping
+
+[80] error: 'NoneType' object is not iterable — skipping
+
+[81] error: 'NoneType' object is not iterable — skipping
+
+[82] error: 'NoneType' object is not iterable — skipping
+
+[83] error: 'NoneType' object is not iterable — skipping
+
+[84] error: 'NoneType' object is not iterable — skipping
+
+[85] error: 'NoneType' object is not iterable — skipping
+
+[86] error: 'NoneType' object is not iterable — skipping
+
+[87] error: 'NoneType' object is not iterable — skipping
+
+[88] error: 'NoneType' object is not iterable — skipping
+
+[89] error: 'NoneType' object is not iterable — skipping
+
+[90] error: 'NoneType' object is not iterable — skipping
+
+[91] error: 'NoneType' object is not iterable — skipping
+
+[92] error: 'NoneType' object is not iterable — skipping
+
+[93] error: 'NoneType' object is not iterable — skipping
+
+[94] error: 'NoneType' object is not iterable — skipping
+
+[95] error: 'NoneType' object is not iterable — skipping
+
+[96] error: 'NoneType' object is not iterable — skipping
+
+[97] error: 'NoneType' object is not iterable — skipping
+
+[98] error: 'NoneType' object is not iterable — skipping
+
+[99] error: 'NoneType' object is not iterable — skipping
+
+[100] error: 'NoneType' object is not iterable — skipping
+
+[101] error: 'NoneType' object is not iterable — skipping
+
+[102] error: 'NoneType' object is not iterable — skipping
+
+[103] error: 'NoneType' object is not iterable — skipping
+
+[104] error: 'NoneType' object is not iterable — skipping
+
+[105] error: 'NoneType' object is not iterable — skipping
+
+[106] error: 'NoneType' object is not iterable — skipping
+
+[107] error: 'NoneType' object is not iterable — skipping
+
+[108] error: 'NoneType' object is not iterable — skipping
+
+[109] error: 'NoneType' object is not iterable — skipping
+
+[110] error: 'NoneType' object is not iterable — skipping
+
+[111] error: 'NoneType' object is not iterable — skipping
+
+[112] error: 'NoneType' object is not iterable — skipping
+
+[113] error: 'NoneType' object is not iterable — skipping
+
+[114] error: 'NoneType' object is not iterable — skipping
+
+[115] error: 'NoneType' object is not iterable — skipping
+
+[116] error: 'NoneType' object is not iterable — skipping
+
+[117] error: 'NoneType' object is not iterable — skipping
+
+[118] error: 'NoneType' object is not iterable — skipping
+
+[119] error: 'NoneType' object is not iterable — skipping
+
+[120] error: 'NoneType' object is not iterable — skipping
+
+[121] error: 'NoneType' object is not iterable — skipping
+
+[122] error: 'NoneType' object is not iterable — skipping
+
+[123] error: 'NoneType' object is not iterable — skipping
+
+[124] error: 'NoneType' object is not iterable — skipping
+
+[125] error: 'NoneType' object is not iterable — skipping
+
+[126] error: 'NoneType' object is not iterable — skipping
+
+[127] error: 'NoneType' object is not iterable — skipping
+
+[128] error: 'NoneType' object is not iterable — skipping
+
+[129] error: 'NoneType' object is not iterable — skipping
+
+[130] error: 'NoneType' object is not iterable — skipping
+
+[131] error: 'NoneType' object is not iterable — skipping
+
+[132] error: 'NoneType' object is not iterable — skipping
+
+[133] error: 'NoneType' object is not iterable — skipping
+
+[134] error: 'NoneType' object is not iterable — skipping
+
+[135] error: 'NoneType' object is not iterable — skipping
+
+[136] error: 'NoneType' object is not iterable — skippingGenerating:   6%|▋         | 142/2244 [00:02<00:30, 68.62it/s]Generating:   7%|▋         | 149/2244 [00:02<00:31, 67.50it/s]Generating:   7%|▋         | 156/2244 [00:02<00:30, 68.10it/s]Generating:   7%|▋         | 163/2244 [00:02<00:30, 67.45it/s]Generating:   8%|▊         | 170/2244 [00:02<00:30, 67.82it/s]Generating:   8%|▊         | 177/2244 [00:02<00:30, 67.22it/s]Generating:   8%|▊         | 184/2244 [00:02<00:31, 66.21it/s]Generating:   9%|▊         | 191/2244 [00:02<00:31, 65.80it/s]Generating:   9%|▉         | 199/2244 [00:02<00:29, 68.23it/s]Generating:   9%|▉         | 206/2244 [00:03<00:30, 67.44it/s]Generating:   9%|▉         | 213/2244 [00:03<00:29, 68.14it/s]Generating:  10%|▉         | 220/2244 [00:03<00:30, 66.67it/s]Generating:  10%|█         | 227/2244 [00:03<00:30, 66.87it/s]Generating:  10%|█         | 234/2244 [00:03<00:30, 66.14it/s]Generating:  11%|█         | 241/2244 [00:03<00:30, 65.31it/s]Generating:  11%|█         | 248/2244 [00:03<00:31, 64.14it/s]Generating:  11%|█▏        | 255/2244 [00:03<00:31, 63.94it/s]Generating:  12%|█▏        | 262/2244 [00:03<00:30, 65.08it/s]Generating:  12%|█▏        | 269/2244 [00:04<00:30, 65.64it/s]
+
+[137] error: 'NoneType' object is not iterable — skipping
+
+[138] error: 'NoneType' object is not iterable — skipping
+
+[139] error: 'NoneType' object is not iterable — skipping
+
+[140] error: 'NoneType' object is not iterable — skipping
+
+[141] error: 'NoneType' object is not iterable — skipping
+
+[142] error: 'NoneType' object is not iterable — skipping
+
+[143] error: 'NoneType' object is not iterable — skipping
+
+[144] error: 'NoneType' object is not iterable — skipping
+
+[145] error: 'NoneType' object is not iterable — skipping
+
+[146] error: 'NoneType' object is not iterable — skipping
+
+[147] error: 'NoneType' object is not iterable — skipping
+
+[148] error: 'NoneType' object is not iterable — skipping
+
+[149] error: 'NoneType' object is not iterable — skipping
+
+[150] error: 'NoneType' object is not iterable — skipping
+
+[151] error: 'NoneType' object is not iterable — skipping
+
+[152] error: 'NoneType' object is not iterable — skipping
+
+[153] error: 'NoneType' object is not iterable — skipping
+
+[154] error: 'NoneType' object is not iterable — skipping
+
+[155] error: 'NoneType' object is not iterable — skipping
+
+[156] error: 'NoneType' object is not iterable — skipping
+
+[157] error: 'NoneType' object is not iterable — skipping
+
+[158] error: 'NoneType' object is not iterable — skipping
+
+[159] error: 'NoneType' object is not iterable — skipping
+
+[160] error: 'NoneType' object is not iterable — skipping
+
+[161] error: 'NoneType' object is not iterable — skipping
+
+[162] error: 'NoneType' object is not iterable — skipping
+
+[163] error: 'NoneType' object is not iterable — skipping
+
+[164] error: 'NoneType' object is not iterable — skipping
+
+[165] error: 'NoneType' object is not iterable — skipping
+
+[166] error: 'NoneType' object is not iterable — skipping
+
+[167] error: 'NoneType' object is not iterable — skipping
+
+[168] error: 'NoneType' object is not iterable — skipping
+
+[169] error: 'NoneType' object is not iterable — skipping
+
+[170] error: 'NoneType' object is not iterable — skipping
+
+[171] error: 'NoneType' object is not iterable — skipping
+
+[172] error: 'NoneType' object is not iterable — skipping
+
+[173] error: 'NoneType' object is not iterable — skipping
+
+[174] error: 'NoneType' object is not iterable — skipping
+
+[175] error: 'NoneType' object is not iterable — skipping
+
+[176] error: 'NoneType' object is not iterable — skipping
+
+[177] error: 'NoneType' object is not iterable — skipping
+
+[178] error: 'NoneType' object is not iterable — skipping
+
+[179] error: 'NoneType' object is not iterable — skipping
+
+[180] error: 'NoneType' object is not iterable — skipping
+
+[181] error: 'NoneType' object is not iterable — skipping
+
+[182] error: 'NoneType' object is not iterable — skipping
+
+[183] error: 'NoneType' object is not iterable — skipping
+
+[184] error: 'NoneType' object is not iterable — skipping
+
+[185] error: 'NoneType' object is not iterable — skipping
+
+[186] error: 'NoneType' object is not iterable — skipping
+
+[187] error: 'NoneType' object is not iterable — skipping
+
+[188] error: 'NoneType' object is not iterable — skipping
+
+[189] error: 'NoneType' object is not iterable — skipping
+
+[190] error: 'NoneType' object is not iterable — skipping
+
+[191] error: 'NoneType' object is not iterable — skipping
+
+[192] error: 'NoneType' object is not iterable — skipping
+
+[193] error: 'NoneType' object is not iterable — skipping
+
+[194] error: 'NoneType' object is not iterable — skipping
+
+[195] error: 'NoneType' object is not iterable — skipping
+
+[196] error: 'NoneType' object is not iterable — skipping
+
+[197] error: 'NoneType' object is not iterable — skipping
+
+[198] error: 'NoneType' object is not iterable — skipping
+
+[199] error: 'NoneType' object is not iterable — skipping
+
+[200] error: 'NoneType' object is not iterable — skipping
+
+[201] error: 'NoneType' object is not iterable — skipping
+
+[202] error: 'NoneType' object is not iterable — skipping
+
+[203] error: 'NoneType' object is not iterable — skipping
+
+[204] error: 'NoneType' object is not iterable — skipping
+
+[205] error: 'NoneType' object is not iterable — skipping
+
+[206] error: 'NoneType' object is not iterable — skipping
+
+[207] error: 'NoneType' object is not iterable — skipping
+
+[208] error: 'NoneType' object is not iterable — skipping
+
+[209] error: 'NoneType' object is not iterable — skipping
+
+[210] error: 'NoneType' object is not iterable — skipping
+
+[211] error: 'NoneType' object is not iterable — skipping
+
+[212] error: 'NoneType' object is not iterable — skipping
+
+[213] error: 'NoneType' object is not iterable — skipping
+
+[214] error: 'NoneType' object is not iterable — skipping
+
+[215] error: 'NoneType' object is not iterable — skipping
+
+[216] error: 'NoneType' object is not iterable — skipping
+
+[217] error: 'NoneType' object is not iterable — skipping
+
+[218] error: 'NoneType' object is not iterable — skipping
+
+[219] error: 'NoneType' object is not iterable — skipping
+
+[220] error: 'NoneType' object is not iterable — skipping
+
+[221] error: 'NoneType' object is not iterable — skipping
+
+[222] error: 'NoneType' object is not iterable — skipping
+
+[223] error: 'NoneType' object is not iterable — skipping
+
+[224] error: 'NoneType' object is not iterable — skipping
+
+[225] error: 'NoneType' object is not iterable — skipping
+
+[226] error: 'NoneType' object is not iterable — skipping
+
+[227] error: 'NoneType' object is not iterable — skipping
+
+[228] error: 'NoneType' object is not iterable — skipping
+
+[229] error: 'NoneType' object is not iterable — skipping
+
+[230] error: 'NoneType' object is not iterable — skipping
+
+[231] error: 'NoneType' object is not iterable — skipping
+
+[232] error: 'NoneType' object is not iterable — skipping
+
+[233] error: 'NoneType' object is not iterable — skipping
+
+[234] error: 'NoneType' object is not iterable — skipping
+
+[235] error: 'NoneType' object is not iterable — skipping
+
+[236] error: 'NoneType' object is not iterable — skipping
+
+[237] error: 'NoneType' object is not iterable — skipping
+
+[238] error: 'NoneType' object is not iterable — skipping
+
+[239] error: 'NoneType' object is not iterable — skipping
+
+[240] error: 'NoneType' object is not iterable — skipping
+
+[241] error: 'NoneType' object is not iterable — skipping
+
+[242] error: 'NoneType' object is not iterable — skipping
+
+[243] error: 'NoneType' object is not iterable — skipping
+
+[244] error: 'NoneType' object is not iterable — skipping
+
+[245] error: 'NoneType' object is not iterable — skipping
+
+[246] error: 'NoneType' object is not iterable — skipping
+
+[247] error: 'NoneType' object is not iterable — skipping
+
+[248] error: 'NoneType' object is not iterable — skipping
+
+[249] error: 'NoneType' object is not iterable — skipping
+
+[250] error: 'NoneType' object is not iterable — skipping
+
+[251] error: 'NoneType' object is not iterable — skipping
+
+[252] error: 'NoneType' object is not iterable — skipping
+
+[253] error: 'NoneType' object is not iterable — skipping
+
+[254] error: 'NoneType' object is not iterable — skipping
+
+[255] error: 'NoneType' object is not iterable — skipping
+
+[256] error: 'NoneType' object is not iterable — skipping
+
+[257] error: 'NoneType' object is not iterable — skipping
+
+[258] error: 'NoneType' object is not iterable — skipping
+
+[259] error: 'NoneType' object is not iterable — skipping
+
+[260] error: 'NoneType' object is not iterable — skipping
+
+[261] error: 'NoneType' object is not iterable — skipping
+
+[262] error: 'NoneType' object is not iterable — skipping
+
+[263] error: 'NoneType' object is not iterable — skipping
+
+[264] error: 'NoneType' object is not iterable — skipping
+
+[265] error: 'NoneType' object is not iterable — skipping
+
+[266] error: 'NoneType' object is not iterable — skipping
+
+[267] error: 'NoneType' object is not iterable — skipping
+
+[268] error: 'NoneType' object is not iterable — skipping
+
+[269] error: 'NoneType' object is not iterable — skipping
+
+[270] error: 'NoneType' object is not iterable — skipping
+
+[271] error: 'NoneType' object is not iterable — skippingGenerating:  12%|█▏        | 277/2244 [00:04<00:28, 67.96it/s]=============================
+Fri Mar 13 10:24:18 PM CET 2026
+Starting VRD pipeline for model: vila
+=============================
+
+>>> RUN: python scripts/evaluate_vrd_raw.py --task color --model_tag vila --max_new_tokens 4
+Task       : color
+Model tag  : vila
+CSV path   : /Data/masayo.tomita/VLM_probing/data/vrd_csv/vrd_color.csv
+Output CSV : /Data/masayo.tomita/VLM_probing/results/vrd_color/vila/raw_response_predictions.csv
+Loading model: a8cheng/SpatialRGPT-VILA1.5-8B
+Warning: The cache directory for DeepSpeed Triton autotune, /users/eleves-b/2025/masayo.tomita/.triton/autotune, appears to be on an NFS system. While this is generally acceptable, if you experience slowdowns or hanging when DeepSpeed exits, it is recommended to set the TRITON_CACHE_DIR environment variable to a non-NFS path.
+PS3 is not installed. Please install it using the following command:
+pip install ps3
+Fetching 20 files:   0%|          | 0/20 [00:00<?, ?it/s]Fetching 20 files: 100%|██████████| 20/20 [00:00<00:00, 28368.64it/s]
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:01<00:03,  1.10s/it]Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:02,  1.11s/it]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:02<00:00,  1.10it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.53it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.27it/s]
+Some parameters are on the meta device because they were offloaded to the cpu.
+Generating:   0%|          | 0/2244 [00:00<?, ?it/s]Generating:   0%|          | 5/2244 [00:00<00:50, 44.27it/s]Generating:   1%|          | 12/2244 [00:00<00:40, 55.68it/s]Generating:   1%|          | 19/2244 [00:00<00:36, 60.75it/s]Generating:   1%|          | 26/2244 [00:00<00:34, 63.53it/s]Generating:   1%|▏         | 33/2244 [00:00<00:35, 62.82it/s]Generating:   2%|▏         | 40/2244 [00:00<00:35, 61.37it/s]Generating:   2%|▏         | 47/2244 [00:00<00:36, 60.97it/s]Generating:   2%|▏         | 55/2244 [00:00<00:34, 62.88it/s]Generating:   3%|▎         | 62/2244 [00:01<00:34, 63.43it/s]Generating:   3%|▎         | 69/2244 [00:01<00:34, 63.45it/s]Generating:   3%|▎         | 76/2244 [00:01<00:33, 64.25it/s]Generating:   4%|▎         | 83/2244 [00:01<00:33, 63.86it/s]Generating:   4%|▍         | 91/2244 [00:01<00:32, 66.67it/s]Generating:   4%|▍         | 98/2244 [00:01<00:32, 65.78it/s]Generating:   5%|▍         | 105/2244 [00:01<00:32, 66.35it/s]Generating:   5%|▍         | 112/2244 [00:01<00:32, 65.45it/s]Generating:   5%|▌         | 119/2244 [00:01<00:33, 63.75it/s]Generating:   6%|▌         | 126/2244 [00:01<00:32, 64.24it/s]Generating:   6%|▌         | 133/2244 [00:02<00:32, 64.21it/s]
+[0] error: 'NoneType' object is not iterable — skipping
+
+[1] error: 'NoneType' object is not iterable — skipping
+
+[2] error: 'NoneType' object is not iterable — skipping
+
+[3] error: 'NoneType' object is not iterable — skipping
+
+[4] error: 'NoneType' object is not iterable — skipping
+
+[5] error: 'NoneType' object is not iterable — skipping
+
+[6] error: 'NoneType' object is not iterable — skipping
+
+[7] error: 'NoneType' object is not iterable — skipping
+
+[8] error: 'NoneType' object is not iterable — skipping
+
+[9] error: 'NoneType' object is not iterable — skipping
+
+[10] error: 'NoneType' object is not iterable — skipping
+
+[11] error: 'NoneType' object is not iterable — skipping
+
+[12] error: 'NoneType' object is not iterable — skipping
+
+[13] error: 'NoneType' object is not iterable — skipping
+
+[14] error: 'NoneType' object is not iterable — skipping
+
+[15] error: 'NoneType' object is not iterable — skipping
+
+[16] error: 'NoneType' object is not iterable — skipping
+
+[17] error: 'NoneType' object is not iterable — skipping
+
+[18] error: 'NoneType' object is not iterable — skipping
+
+[19] error: 'NoneType' object is not iterable — skipping
+
+[20] error: 'NoneType' object is not iterable — skipping
+
+[21] error: 'NoneType' object is not iterable — skipping
+
+[22] error: 'NoneType' object is not iterable — skipping
+
+[23] error: 'NoneType' object is not iterable — skipping
+
+[24] error: 'NoneType' object is not iterable — skipping
+
+[25] error: 'NoneType' object is not iterable — skipping
+
+[26] error: 'NoneType' object is not iterable — skipping
+
+[27] error: 'NoneType' object is not iterable — skipping
+
+[28] error: 'NoneType' object is not iterable — skipping
+
+[29] error: 'NoneType' object is not iterable — skipping
+
+[30] error: 'NoneType' object is not iterable — skipping
+
+[31] error: 'NoneType' object is not iterable — skipping
+
+[32] error: 'NoneType' object is not iterable — skipping
+
+[33] error: 'NoneType' object is not iterable — skipping
+
+[34] error: 'NoneType' object is not iterable — skipping
+
+[35] error: 'NoneType' object is not iterable — skipping
+
+[36] error: 'NoneType' object is not iterable — skipping
+
+[37] error: 'NoneType' object is not iterable — skipping
+
+[38] error: 'NoneType' object is not iterable — skipping
+
+[39] error: 'NoneType' object is not iterable — skipping
+
+[40] error: 'NoneType' object is not iterable — skipping
+
+[41] error: 'NoneType' object is not iterable — skipping
+
+[42] error: 'NoneType' object is not iterable — skipping
+
+[43] error: 'NoneType' object is not iterable — skipping
+
+[44] error: 'NoneType' object is not iterable — skipping
+
+[45] error: 'NoneType' object is not iterable — skipping
+
+[46] error: 'NoneType' object is not iterable — skipping
+
+[47] error: 'NoneType' object is not iterable — skipping
+
+[48] error: 'NoneType' object is not iterable — skipping
+
+[49] error: 'NoneType' object is not iterable — skipping
+
+[50] error: 'NoneType' object is not iterable — skipping
+
+[51] error: 'NoneType' object is not iterable — skipping
+
+[52] error: 'NoneType' object is not iterable — skipping
+
+[53] error: 'NoneType' object is not iterable — skipping
+
+[54] error: 'NoneType' object is not iterable — skipping
+
+[55] error: 'NoneType' object is not iterable — skipping
+
+[56] error: 'NoneType' object is not iterable — skipping
+
+[57] error: 'NoneType' object is not iterable — skipping
+
+[58] error: 'NoneType' object is not iterable — skipping
+
+[59] error: 'NoneType' object is not iterable — skipping
+
+[60] error: 'NoneType' object is not iterable — skipping
+
+[61] error: 'NoneType' object is not iterable — skipping
+
+[62] error: 'NoneType' object is not iterable — skipping
+
+[63] error: 'NoneType' object is not iterable — skipping
+
+[64] error: 'NoneType' object is not iterable — skipping
+
+[65] error: 'NoneType' object is not iterable — skipping
+
+[66] error: 'NoneType' object is not iterable — skipping
+
+[67] error: 'NoneType' object is not iterable — skipping
+
+[68] error: 'NoneType' object is not iterable — skipping
+
+[69] error: 'NoneType' object is not iterable — skipping
+
+[70] error: 'NoneType' object is not iterable — skipping
+
+[71] error: 'NoneType' object is not iterable — skipping
+
+[72] error: 'NoneType' object is not iterable — skipping
+
+[73] error: 'NoneType' object is not iterable — skipping
+
+[74] error: 'NoneType' object is not iterable — skipping
+
+[75] error: 'NoneType' object is not iterable — skipping
+
+[76] error: 'NoneType' object is not iterable — skipping
+
+[77] error: 'NoneType' object is not iterable — skipping
+
+[78] error: 'NoneType' object is not iterable — skipping
+
+[79] error: 'NoneType' object is not iterable — skipping
+
+[80] error: 'NoneType' object is not iterable — skipping
+
+[81] error: 'NoneType' object is not iterable — skipping
+
+[82] error: 'NoneType' object is not iterable — skipping
+
+[83] error: 'NoneType' object is not iterable — skipping
+
+[84] error: 'NoneType' object is not iterable — skipping
+
+[85] error: 'NoneType' object is not iterable — skipping
+
+[86] error: 'NoneType' object is not iterable — skipping
+
+[87] error: 'NoneType' object is not iterable — skipping
+
+[88] error: 'NoneType' object is not iterable — skipping
+
+[89] error: 'NoneType' object is not iterable — skipping
+
+[90] error: 'NoneType' object is not iterable — skipping
+
+[91] error: 'NoneType' object is not iterable — skipping
+
+[92] error: 'NoneType' object is not iterable — skipping
+
+[93] error: 'NoneType' object is not iterable — skipping
+
+[94] error: 'NoneType' object is not iterable — skipping
+
+[95] error: 'NoneType' object is not iterable — skipping
+
+[96] error: 'NoneType' object is not iterable — skipping
+
+[97] error: 'NoneType' object is not iterable — skipping
+
+[98] error: 'NoneType' object is not iterable — skipping
+
+[99] error: 'NoneType' object is not iterable — skipping
+
+[100] error: 'NoneType' object is not iterable — skipping
+
+[101] error: 'NoneType' object is not iterable — skipping
+
+[102] error: 'NoneType' object is not iterable — skipping
+
+[103] error: 'NoneType' object is not iterable — skipping
+
+[104] error: 'NoneType' object is not iterable — skipping
+
+[105] error: 'NoneType' object is not iterable — skipping
+
+[106] error: 'NoneType' object is not iterable — skipping
+
+[107] error: 'NoneType' object is not iterable — skipping
+
+[108] error: 'NoneType' object is not iterable — skipping
+
+[109] error: 'NoneType' object is not iterable — skipping
+
+[110] error: 'NoneType' object is not iterable — skipping
+
+[111] error: 'NoneType' object is not iterable — skipping
+
+[112] error: 'NoneType' object is not iterable — skipping
+
+[113] error: 'NoneType' object is not iterable — skipping
+
+[114] error: 'NoneType' object is not iterable — skipping
+
+[115] error: 'NoneType' object is not iterable — skipping
+
+[116] error: 'NoneType' object is not iterable — skipping
+
+[117] error: 'NoneType' object is not iterable — skipping
+
+[118] error: 'NoneType' object is not iterable — skipping
+
+[119] error: 'NoneType' object is not iterable — skipping
+
+[120] error: 'NoneType' object is not iterable — skipping
+
+[121] error: 'NoneType' object is not iterable — skipping
+
+[122] error: 'NoneType' object is not iterable — skipping
+
+[123] error: 'NoneType' object is not iterable — skipping
+
+[124] error: 'NoneType' object is not iterable — skipping
+
+[125] error: 'NoneType' object is not iterable — skipping
+
+[126] error: 'NoneType' object is not iterable — skipping
+
+[127] error: 'NoneType' object is not iterable — skipping
+
+[128] error: 'NoneType' object is not iterable — skipping
+
+[129] error: 'NoneType' object is not iterable — skipping
+
+[130] error: 'NoneType' object is not iterable — skipping
+
+[131] error: 'NoneType' object is not iterable — skipping
+
+[132] error: 'NoneType' object is not iterable — skipping
+
+[133] error: 'NoneType' object is not iterable — skipping
+
+[134] error: 'NoneType' object is not iterable — skipping
+
+[135] error: 'NoneType' object is not iterable — skipping
+
+[136] error: 'NoneType' object is not iterable — skippingGenerating:   6%|▋         | 141/2244 [00:02<00:32, 65.51it/s]Generating:   7%|▋         | 148/2244 [00:02<00:32, 64.59it/s]Generating:   7%|▋         | 155/2244 [00:02<00:32, 65.22it/s]Generating:   7%|▋         | 162/2244 [00:02<00:32, 64.61it/s]Generating:   8%|▊         | 169/2244 [00:02<00:32, 64.64it/s]Generating:   8%|▊         | 176/2244 [00:02<00:32, 63.98it/s]Generating:   8%|▊         | 183/2244 [00:02<00:32, 63.45it/s]Generating:   8%|▊         | 190/2244 [00:02<00:32, 63.01it/s]Generating:   9%|▉         | 198/2244 [00:03<00:31, 65.20it/s]Generating:   9%|▉         | 205/2244 [00:03<00:31, 65.67it/s]Generating:   9%|▉         | 212/2244 [00:03<00:31, 64.91it/s]Generating:  10%|▉         | 219/2244 [00:03<00:31, 63.64it/s]Generating:  10%|█         | 226/2244 [00:03<00:31, 63.94it/s]Generating:  10%|█         | 233/2244 [00:03<00:31, 62.99it/s]Generating:  11%|█         | 240/2244 [00:03<00:31, 62.66it/s]Generating:  11%|█         | 247/2244 [00:03<00:32, 61.81it/s]Generating:  11%|█▏        | 254/2244 [00:04<00:32, 61.29it/s]Generating:  12%|█▏        | 261/2244 [00:04<00:32, 61.49it/s]Generating:  12%|█▏        | 268/2244 [00:04<00:31, 63.06it/s]
+
+[137] error: 'NoneType' object is not iterable — skipping
+
+[138] error: 'NoneType' object is not iterable — skipping
+
+[139] error: 'NoneType' object is not iterable — skipping
+
+[140] error: 'NoneType' object is not iterable — skipping
+
+[141] error: 'NoneType' object is not iterable — skipping
+
+[142] error: 'NoneType' object is not iterable — skipping
+
+[143] error: 'NoneType' object is not iterable — skipping
+
+[144] error: 'NoneType' object is not iterable — skipping
+
+[145] error: 'NoneType' object is not iterable — skipping
+
+[146] error: 'NoneType' object is not iterable — skipping
+
+[147] error: 'NoneType' object is not iterable — skipping
+
+[148] error: 'NoneType' object is not iterable — skipping
+
+[149] error: 'NoneType' object is not iterable — skipping
+
+[150] error: 'NoneType' object is not iterable — skipping
+
+[151] error: 'NoneType' object is not iterable — skipping
+
+[152] error: 'NoneType' object is not iterable — skipping
+
+[153] error: 'NoneType' object is not iterable — skipping
+
+[154] error: 'NoneType' object is not iterable — skipping
+
+[155] error: 'NoneType' object is not iterable — skipping
+
+[156] error: 'NoneType' object is not iterable — skipping
+
+[157] error: 'NoneType' object is not iterable — skipping
+
+[158] error: 'NoneType' object is not iterable — skipping
+
+[159] error: 'NoneType' object is not iterable — skipping
+
+[160] error: 'NoneType' object is not iterable — skipping
+
+[161] error: 'NoneType' object is not iterable — skipping
+
+[162] error: 'NoneType' object is not iterable — skipping
+
+[163] error: 'NoneType' object is not iterable — skipping
+
+[164] error: 'NoneType' object is not iterable — skipping
+
+[165] error: 'NoneType' object is not iterable — skipping
+
+[166] error: 'NoneType' object is not iterable — skipping
+
+[167] error: 'NoneType' object is not iterable — skipping
+
+[168] error: 'NoneType' object is not iterable — skipping
+
+[169] error: 'NoneType' object is not iterable — skipping
+
+[170] error: 'NoneType' object is not iterable — skipping
+
+[171] error: 'NoneType' object is not iterable — skipping
+
+[172] error: 'NoneType' object is not iterable — skipping
+
+[173] error: 'NoneType' object is not iterable — skipping
+
+[174] error: 'NoneType' object is not iterable — skipping
+
+[175] error: 'NoneType' object is not iterable — skipping
+
+[176] error: 'NoneType' object is not iterable — skipping
+
+[177] error: 'NoneType' object is not iterable — skipping
+
+[178] error: 'NoneType' object is not iterable — skipping
+
+[179] error: 'NoneType' object is not iterable — skipping
+
+[180] error: 'NoneType' object is not iterable — skipping
+
+[181] error: 'NoneType' object is not iterable — skipping
+
+[182] error: 'NoneType' object is not iterable — skipping
+
+[183] error: 'NoneType' object is not iterable — skipping
+
+[184] error: 'NoneType' object is not iterable — skipping
+
+[185] error: 'NoneType' object is not iterable — skipping
+
+[186] error: 'NoneType' object is not iterable — skipping
+
+[187] error: 'NoneType' object is not iterable — skipping
+
+[188] error: 'NoneType' object is not iterable — skipping
+
+[189] error: 'NoneType' object is not iterable — skipping
+
+[190] error: 'NoneType' object is not iterable — skipping
+
+[191] error: 'NoneType' object is not iterable — skipping
+
+[192] error: 'NoneType' object is not iterable — skipping
+
+[193] error: 'NoneType' object is not iterable — skipping
+
+[194] error: 'NoneType' object is not iterable — skipping
+
+[195] error: 'NoneType' object is not iterable — skipping
+
+[196] error: 'NoneType' object is not iterable — skipping
+
+[197] error: 'NoneType' object is not iterable — skipping
+
+[198] error: 'NoneType' object is not iterable — skipping
+
+[199] error: 'NoneType' object is not iterable — skipping
+
+[200] error: 'NoneType' object is not iterable — skipping
+
+[201] error: 'NoneType' object is not iterable — skipping
+
+[202] error: 'NoneType' object is not iterable — skipping
+
+[203] error: 'NoneType' object is not iterable — skipping
+
+[204] error: 'NoneType' object is not iterable — skipping
+
+[205] error: 'NoneType' object is not iterable — skipping
+
+[206] error: 'NoneType' object is not iterable — skipping
+
+[207] error: 'NoneType' object is not iterable — skipping
+
+[208] error: 'NoneType' object is not iterable — skipping
+
+[209] error: 'NoneType' object is not iterable — skipping
+
+[210] error: 'NoneType' object is not iterable — skipping
+
+[211] error: 'NoneType' object is not iterable — skipping
+
+[212] error: 'NoneType' object is not iterable — skipping
+
+[213] error: 'NoneType' object is not iterable — skipping
+
+[214] error: 'NoneType' object is not iterable — skipping
+
+[215] error: 'NoneType' object is not iterable — skipping
+
+[216] error: 'NoneType' object is not iterable — skipping
+
+[217] error: 'NoneType' object is not iterable — skipping
+
+[218] error: 'NoneType' object is not iterable — skipping
+
+[219] error: 'NoneType' object is not iterable — skipping
+
+[220] error: 'NoneType' object is not iterable — skipping
+
+[221] error: 'NoneType' object is not iterable — skipping
+
+[222] error: 'NoneType' object is not iterable — skipping
+
+[223] error: 'NoneType' object is not iterable — skipping
+
+[224] error: 'NoneType' object is not iterable — skipping
+
+[225] error: 'NoneType' object is not iterable — skipping
+
+[226] error: 'NoneType' object is not iterable — skipping
+
+[227] error: 'NoneType' object is not iterable — skipping
+
+[228] error: 'NoneType' object is not iterable — skipping
+
+[229] error: 'NoneType' object is not iterable — skipping
+
+[230] error: 'NoneType' object is not iterable — skipping
+
+[231] error: 'NoneType' object is not iterable — skipping
+
+[232] error: 'NoneType' object is not iterable — skipping
+
+[233] error: 'NoneType' object is not iterable — skipping
+
+[234] error: 'NoneType' object is not iterable — skipping
+
+[235] error: 'NoneType' object is not iterable — skipping
+
+[236] error: 'NoneType' object is not iterable — skipping
+
+[237] error: 'NoneType' object is not iterable — skipping
+
+[238] error: 'NoneType' object is not iterable — skipping
+
+[239] error: 'NoneType' object is not iterable — skipping
+
+[240] error: 'NoneType' object is not iterable — skipping
+
+[241] error: 'NoneType' object is not iterable — skipping
+
+[242] error: 'NoneType' object is not iterable — skipping
+
+[243] error: 'NoneType' object is not iterable — skipping
+
+[244] error: 'NoneType' object is not iterable — skipping
+
+[245] error: 'NoneType' object is not iterable — skipping
+
+[246] error: 'NoneType' object is not iterable — skipping
+
+[247] error: 'NoneType' object is not iterable — skipping
+
+[248] error: 'NoneType' object is not iterable — skipping
+
+[249] error: 'NoneType' object is not iterable — skipping
+
+[250] error: 'NoneType' object is not iterable — skipping
+
+[251] error: 'NoneType' object is not iterable — skipping
+
+[252] error: 'NoneType' object is not iterable — skipping
+
+[253] error: 'NoneType' object is not iterable — skipping
+
+[254] error: 'NoneType' object is not iterable — skipping
+
+[255] error: 'NoneType' object is not iterable — skipping
+
+[256] error: 'NoneType' object is not iterable — skipping
+
+[257] error: 'NoneType' object is not iterable — skipping
+
+[258] error: 'NoneType' object is not iterable — skipping
+
+[259] error: 'NoneType' object is not iterable — skipping
+
+[260] error: 'NoneType' object is not iterable — skipping
+
+[261] error: 'NoneType' object is not iterable — skipping
+
+[262] error: 'NoneType' object is not iterable — skipping
+
+[263] error: 'NoneType' object is not iterable — skipping
+
+[264] error: 'NoneType' object is not iterable — skipping
+
+[265] error: 'NoneType' object is not iterable — skipping
+
+[266] error: 'NoneType' object is not iterable — skipping
+
+[267] error: 'NoneType' object is not iterable — skipping
+
+[268] error: 'NoneType' object is not iterable — skipping
+
+[269] error: 'NoneType' object is not iterable — skipping
+
+[270] error: 'NoneType' object is not iterable — skipping
+
+[271] error: 'NoneType' object is not iterable — skippingGenerating:  12%|█▏        | 276/2244 [00:04<00:30, 65.29it/s]Generating:  13%|█▎        | 283/2244 [00:04<00:29, 66.26it/s]Generating:  13%|█▎        | 290/2244 [00:04<00:29, 65.85it/s]Generating:  13%|█▎        | 297/2244 [00:04<00:29, 65.21it/s]Generating:  14%|█▎        | 304/2244 [00:04<00:30, 63.81it/s]Generating:  14%|█▍        | 311/2244 [00:04<00:30, 63.74it/s]Generating:  14%|█▍        | 318/2244 [00:04<00:30, 63.34it/s]Generating:  14%|█▍        | 325/2244 [00:05<00:30, 62.70it/s]Generating:  15%|█▍        | 332/2244 [00:05<00:30, 62.31it/s]Generating:  15%|█▌        | 339/2244 [00:05<00:30, 62.44it/s]Generating:  15%|█▌        | 346/2244 [00:05<00:30, 62.23it/s]Generating:  16%|█▌        | 353/2244 [00:05<00:29, 63.38it/s]Generating:  16%|█▌        | 360/2244 [00:05<00:29, 63.80it/s]Generating:  16%|█▋        | 367/2244 [00:05<00:29, 63.78it/s]Generating:  17%|█▋        | 375/2244 [00:05<00:28, 65.81it/s]Generating:  17%|█▋        | 382/2244 [00:05<00:28, 64.87it/s]Generating:  17%|█▋        | 389/2244 [00:06<00:29, 63.74it/s]Generating:  18%|█▊        | 396/2244 [00:06<00:28, 64.26it/s]Generating:  18%|█▊        | 403/2244 [00:06<00:28, 63.51it/s]
+
+[272] error: 'NoneType' object is not iterable — skipping
+
+[273] error: 'NoneType' object is not iterable — skipping
+
+[274] error: 'NoneType' object is not iterable — skipping
+
+[275] error: 'NoneType' object is not iterable — skipping
+
+[276] error: 'NoneType' object is not iterable — skipping
+
+[277] error: 'NoneType' object is not iterable — skipping
+
+[278] error: 'NoneType' object is not iterable — skipping
+
+[279] error: 'NoneType' object is not iterable — skipping
+
+[280] error: 'NoneType' object is not iterable — skipping
+
+[281] error: 'NoneType' object is not iterable — skipping
+
+[282] error: 'NoneType' object is not iterable — skipping
+
+[283] error: 'NoneType' object is not iterable — skipping
+
+[284] error: 'NoneType' object is not iterable — skipping
+
+[285] error: 'NoneType' object is not iterable — skipping
+
+[286] error: 'NoneType' object is not iterable — skipping
+
+[287] error: 'NoneType' object is not iterable — skipping
+
+[288] error: 'NoneType' object is not iterable — skipping
+
+[289] error: 'NoneType' object is not iterable — skipping
+
+[290] error: 'NoneType' object is not iterable — skipping
+
+[291] error: 'NoneType' object is not iterable — skipping
+
+[292] error: 'NoneType' object is not iterable — skipping
+
+[293] error: 'NoneType' object is not iterable — skipping
+
+[294] error: 'NoneType' object is not iterable — skipping
+
+[295] error: 'NoneType' object is not iterable — skipping
+
+[296] error: 'NoneType' object is not iterable — skipping
+
+[297] error: 'NoneType' object is not iterable — skipping
+
+[298] error: 'NoneType' object is not iterable — skipping
+
+[299] error: 'NoneType' object is not iterable — skipping
+
+[300] error: 'NoneType' object is not iterable — skipping
+
+[301] error: 'NoneType' object is not iterable — skipping
+
+[302] error: 'NoneType' object is not iterable — skipping
+
+[303] error: 'NoneType' object is not iterable — skipping
+
+[304] error: 'NoneType' object is not iterable — skipping
+
+[305] error: 'NoneType' object is not iterable — skipping
+
+[306] error: 'NoneType' object is not iterable — skipping
+
+[307] error: 'NoneType' object is not iterable — skipping
+
+[308] error: 'NoneType' object is not iterable — skipping
+
+[309] error: 'NoneType' object is not iterable — skipping
+
+[310] error: 'NoneType' object is not iterable — skipping
+
+[311] error: 'NoneType' object is not iterable — skipping
+
+[312] error: 'NoneType' object is not iterable — skipping
+
+[313] error: 'NoneType' object is not iterable — skipping
+
+[314] error: 'NoneType' object is not iterable — skipping
+
+[315] error: 'NoneType' object is not iterable — skipping
+
+[316] error: 'NoneType' object is not iterable — skipping
+
+[317] error: 'NoneType' object is not iterable — skipping
+
+[318] error: 'NoneType' object is not iterable — skipping
+
+[319] error: 'NoneType' object is not iterable — skipping
+
+[320] error: 'NoneType' object is not iterable — skipping
+
+[321] error: 'NoneType' object is not iterable — skipping
+
+[322] error: 'NoneType' object is not iterable — skipping
+
+[323] error: 'NoneType' object is not iterable — skipping
+
+[324] error: 'NoneType' object is not iterable — skipping
+
+[325] error: 'NoneType' object is not iterable — skipping
+
+[326] error: 'NoneType' object is not iterable — skipping
+
+[327] error: 'NoneType' object is not iterable — skipping
+
+[328] error: 'NoneType' object is not iterable — skipping
+
+[329] error: 'NoneType' object is not iterable — skipping
+
+[330] error: 'NoneType' object is not iterable — skipping
+
+[331] error: 'NoneType' object is not iterable — skipping
+
+[332] error: 'NoneType' object is not iterable — skipping
+
+[333] error: 'NoneType' object is not iterable — skipping
+
+[334] error: 'NoneType' object is not iterable — skipping
+
+[335] error: 'NoneType' object is not iterable — skipping
+
+[336] error: 'NoneType' object is not iterable — skipping
+
+[337] error: 'NoneType' object is not iterable — skipping
+
+[338] error: 'NoneType' object is not iterable — skipping
+
+[339] error: 'NoneType' object is not iterable — skipping
+
+[340] error: 'NoneType' object is not iterable — skipping
+
+[341] error: 'NoneType' object is not iterable — skipping
+
+[342] error: 'NoneType' object is not iterable — skipping
+
+[343] error: 'NoneType' object is not iterable — skipping
+
+[344] error: 'NoneType' object is not iterable — skipping
+
+[345] error: 'NoneType' object is not iterable — skipping
+
+[346] error: 'NoneType' object is not iterable — skipping
+
+[347] error: 'NoneType' object is not iterable — skipping
+
+[348] error: 'NoneType' object is not iterable — skipping
+
+[349] error: 'NoneType' object is not iterable — skipping
+
+[350] error: 'NoneType' object is not iterable — skipping
+
+[351] error: 'NoneType' object is not iterable — skipping
+
+[352] error: 'NoneType' object is not iterable — skipping
+
+[353] error: 'NoneType' object is not iterable — skipping
+
+[354] error: 'NoneType' object is not iterable — skipping
+
+[355] error: 'NoneType' object is not iterable — skipping
+
+[356] error: 'NoneType' object is not iterable — skipping
+
+[357] error: 'NoneType' object is not iterable — skipping
+
+[358] error: 'NoneType' object is not iterable — skipping
+
+[359] error: 'NoneType' object is not iterable — skipping
+
+[360] error: 'NoneType' object is not iterable — skipping
+
+[361] error: 'NoneType' object is not iterable — skipping
+
+[362] error: 'NoneType' object is not iterable — skipping
+
+[363] error: 'NoneType' object is not iterable — skipping
+
+[364] error: 'NoneType' object is not iterable — skipping
+
+[365] error: 'NoneType' object is not iterable — skipping
+
+[366] error: 'NoneType' object is not iterable — skipping
+
+[367] error: 'NoneType' object is not iterable — skipping
+
+[368] error: 'NoneType' object is not iterable — skipping
+
+[369] error: 'NoneType' object is not iterable — skipping
+
+[370] error: 'NoneType' object is not iterable — skipping
+
+[371] error: 'NoneType' object is not iterable — skipping
+
+[372] error: 'NoneType' object is not iterable — skipping
+
+[373] error: 'NoneType' object is not iterable — skipping
+
+[374] error: 'NoneType' object is not iterable — skipping
+
+[375] error: 'NoneType' object is not iterable — skipping
+
+[376] error: 'NoneType' object is not iterable — skipping
+
+[377] error: 'NoneType' object is not iterable — skipping
+
+[378] error: 'NoneType' object is not iterable — skipping
+
+[379] error: 'NoneType' object is not iterable — skipping
+
+[380] error: 'NoneType' object is not iterable — skipping
+
+[381] error: 'NoneType' object is not iterable — skipping
+
+[382] error: 'NoneType' object is not iterable — skipping
+
+[383] error: 'NoneType' object is not iterable — skipping
+
+[384] error: 'NoneType' object is not iterable — skipping
+
+[385] error: 'NoneType' object is not iterable — skipping
+
+[386] error: 'NoneType' object is not iterable — skipping
+
+[387] error: 'NoneType' object is not iterable — skipping
+
+[388] error: 'NoneType' object is not iterable — skipping
+
+[389] error: 'NoneType' object is not iterable — skipping
+
+[390] error: 'NoneType' object is not iterable — skipping
+
+[391] error: 'NoneType' object is not iterable — skipping
+
+[392] error: 'NoneType' object is not iterable — skipping
+
+[393] error: 'NoneType' object is not iterable — skipping
+
+[394] error: 'NoneType' object is not iterable — skipping
+
+[395] error: 'NoneType' object is not iterable — skipping
+
+[396] error: 'NoneType' object is not iterable — skipping
+
+[397] error: 'NoneType' object is not iterable — skipping
+
+[398] error: 'NoneType' object is not iterable — skipping
+
+[399] error: 'NoneType' object is not iterable — skipping
+
+[400] error: 'NoneType' object is not iterable — skipping
+
+[401] error: 'NoneType' object is not iterable — skipping
+
+[402] error: 'NoneType' object is not iterable — skipping
+
+[403] error: 'NoneType' object is not iterable — skipping
+
+[404] error: 'NoneType' object is not iterable — skipping
+
+[405] error: 'NoneType' object is not iterable — skipping
+
+[406] error: 'NoneType' object is not iterable — skippingGenerating:  18%|█▊        | 410/2244 [00:06<00:28, 64.12it/s]Generating:  19%|█▊        | 417/2244 [00:06<00:27, 65.56it/s]Generating:  19%|█▉        | 424/2244 [00:06<00:28, 64.13it/s]Generating:  19%|█▉        | 431/2244 [00:06<00:28, 63.50it/s]Generating:  20%|█▉        | 438/2244 [00:06<00:28, 64.07it/s]Generating:  20%|█▉        | 445/2244 [00:06<00:28, 62.82it/s]Generating:  20%|██        | 452/2244 [00:07<00:28, 63.25it/s]Generating:  20%|██        | 459/2244 [00:07<00:28, 63.34it/s]Generating:  21%|██        | 466/2244 [00:07<00:28, 62.94it/s]Generating:  21%|██        | 473/2244 [00:07<00:27, 63.76it/s]Generating:  21%|██▏       | 480/2244 [00:07<00:27, 63.87it/s]Generating:  22%|██▏       | 487/2244 [00:07<00:27, 64.98it/s]Generating:  22%|██▏       | 494/2244 [00:07<00:28, 62.32it/s]Generating:  22%|██▏       | 501/2244 [00:07<00:27, 62.92it/s]Generating:  23%|██▎       | 508/2244 [00:07<00:27, 63.14it/s]Generating:  23%|██▎       | 515/2244 [00:08<00:28, 61.66it/s]Generating:  23%|██▎       | 522/2244 [00:08<00:28, 60.21it/s]Generating:  24%|██▎       | 529/2244 [00:08<00:27, 61.33it/s]Generating:  24%|██▍       | 536/2244 [00:08<00:27, 62.24it/s]
+
+[407] error: 'NoneType' object is not iterable — skipping
+
+[408] error: 'NoneType' object is not iterable — skipping
+
+[409] error: 'NoneType' object is not iterable — skipping
+
+[410] error: 'NoneType' object is not iterable — skipping
+
+[411] error: 'NoneType' object is not iterable — skipping
+
+[412] error: 'NoneType' object is not iterable — skipping
+
+[413] error: 'NoneType' object is not iterable — skipping
+
+[414] error: 'NoneType' object is not iterable — skipping
+
+[415] error: 'NoneType' object is not iterable — skipping
+
+[416] error: 'NoneType' object is not iterable — skipping
+
+[417] error: 'NoneType' object is not iterable — skipping
+
+[418] error: 'NoneType' object is not iterable — skipping
+
+[419] error: 'NoneType' object is not iterable — skipping
+
+[420] error: 'NoneType' object is not iterable — skipping
+
+[421] error: 'NoneType' object is not iterable — skipping
+
+[422] error: 'NoneType' object is not iterable — skipping
+
+[423] error: 'NoneType' object is not iterable — skipping
+
+[424] error: 'NoneType' object is not iterable — skipping
+
+[425] error: 'NoneType' object is not iterable — skipping
+
+[426] error: 'NoneType' object is not iterable — skipping
+
+[427] error: 'NoneType' object is not iterable — skipping
+
+[428] error: 'NoneType' object is not iterable — skipping
+
+[429] error: 'NoneType' object is not iterable — skipping
+
+[430] error: 'NoneType' object is not iterable — skipping
+
+[431] error: 'NoneType' object is not iterable — skipping
+
+[432] error: 'NoneType' object is not iterable — skipping
+
+[433] error: 'NoneType' object is not iterable — skipping
+
+[434] error: 'NoneType' object is not iterable — skipping
+
+[435] error: 'NoneType' object is not iterable — skipping
+
+[436] error: 'NoneType' object is not iterable — skipping
+
+[437] error: 'NoneType' object is not iterable — skipping
+
+[438] error: 'NoneType' object is not iterable — skipping
+
+[439] error: 'NoneType' object is not iterable — skipping
+
+[440] error: 'NoneType' object is not iterable — skipping
+
+[441] error: 'NoneType' object is not iterable — skipping
+
+[442] error: 'NoneType' object is not iterable — skipping
+
+[443] error: 'NoneType' object is not iterable — skipping
+
+[444] error: 'NoneType' object is not iterable — skipping
+
+[445] error: 'NoneType' object is not iterable — skipping
+
+[446] error: 'NoneType' object is not iterable — skipping
+
+[447] error: 'NoneType' object is not iterable — skipping
+
+[448] error: 'NoneType' object is not iterable — skipping
+
+[449] error: 'NoneType' object is not iterable — skipping
+
+[450] error: 'NoneType' object is not iterable — skipping
+
+[451] error: 'NoneType' object is not iterable — skipping
+
+[452] error: 'NoneType' object is not iterable — skipping
+
+[453] error: 'NoneType' object is not iterable — skipping
+
+[454] error: 'NoneType' object is not iterable — skipping
+
+[455] error: 'NoneType' object is not iterable — skipping
+
+[456] error: 'NoneType' object is not iterable — skipping
+
+[457] error: 'NoneType' object is not iterable — skipping
+
+[458] error: 'NoneType' object is not iterable — skipping
+
+[459] error: 'NoneType' object is not iterable — skipping
+
+[460] error: 'NoneType' object is not iterable — skipping
+
+[461] error: 'NoneType' object is not iterable — skipping
+
+[462] error: 'NoneType' object is not iterable — skipping
+
+[463] error: 'NoneType' object is not iterable — skipping
+
+[464] error: 'NoneType' object is not iterable — skipping
+
+[465] error: 'NoneType' object is not iterable — skipping
+
+[466] error: 'NoneType' object is not iterable — skipping
+
+[467] error: 'NoneType' object is not iterable — skipping
+
+[468] error: 'NoneType' object is not iterable — skipping
+
+[469] error: 'NoneType' object is not iterable — skipping
+
+[470] error: 'NoneType' object is not iterable — skipping
+
+[471] error: 'NoneType' object is not iterable — skipping
+
+[472] error: 'NoneType' object is not iterable — skipping
+
+[473] error: 'NoneType' object is not iterable — skipping
+
+[474] error: 'NoneType' object is not iterable — skipping
+
+[475] error: 'NoneType' object is not iterable — skipping
+
+[476] error: 'NoneType' object is not iterable — skipping
+
+[477] error: 'NoneType' object is not iterable — skipping
+
+[478] error: 'NoneType' object is not iterable — skipping
+
+[479] error: 'NoneType' object is not iterable — skipping
+
+[480] error: 'NoneType' object is not iterable — skipping
+
+[481] error: 'NoneType' object is not iterable — skipping
+
+[482] error: 'NoneType' object is not iterable — skipping
+
+[483] error: 'NoneType' object is not iterable — skipping
+
+[484] error: 'NoneType' object is not iterable — skipping
+
+[485] error: 'NoneType' object is not iterable — skipping
+
+[486] error: 'NoneType' object is not iterable — skipping
+
+[487] error: 'NoneType' object is not iterable — skipping
+
+[488] error: 'NoneType' object is not iterable — skipping
+
+[489] error: 'NoneType' object is not iterable — skipping
+
+[490] error: 'NoneType' object is not iterable — skipping
+
+[491] error: 'NoneType' object is not iterable — skipping
+
+[492] error: 'NoneType' object is not iterable — skipping
+
+[493] error: 'NoneType' object is not iterable — skipping
+
+[494] error: 'NoneType' object is not iterable — skipping
+
+[495] error: 'NoneType' object is not iterable — skipping
+
+[496] error: 'NoneType' object is not iterable — skipping
+
+[497] error: 'NoneType' object is not iterable — skipping
+
+[498] error: 'NoneType' object is not iterable — skipping
+
+[499] error: 'NoneType' object is not iterable — skipping
+
+[500] error: 'NoneType' object is not iterable — skipping
+
+[501] error: 'NoneType' object is not iterable — skipping
+
+[502] error: 'NoneType' object is not iterable — skipping
+
+[503] error: 'NoneType' object is not iterable — skipping
+
+[504] error: 'NoneType' object is not iterable — skipping
+
+[505] error: 'NoneType' object is not iterable — skipping
+
+[506] error: 'NoneType' object is not iterable — skipping
+
+[507] error: 'NoneType' object is not iterable — skipping
+
+[508] error: 'NoneType' object is not iterable — skipping
+
+[509] error: 'NoneType' object is not iterable — skipping
+
+[510] error: 'NoneType' object is not iterable — skipping
+
+[511] error: 'NoneType' object is not iterable — skipping
+
+[512] error: 'NoneType' object is not iterable — skipping
+
+[513] error: 'NoneType' object is not iterable — skipping
+
+[514] error: 'NoneType' object is not iterable — skipping
+
+[515] error: 'NoneType' object is not iterable — skipping
+
+[516] error: 'NoneType' object is not iterable — skipping
+
+[517] error: 'NoneType' object is not iterable — skipping
+
+[518] error: 'NoneType' object is not iterable — skipping
+
+[519] error: 'NoneType' object is not iterable — skipping
+
+[520] error: 'NoneType' object is not iterable — skipping
+
+[521] error: 'NoneType' object is not iterable — skipping
+
+[522] error: 'NoneType' object is not iterable — skipping
+
+[523] error: 'NoneType' object is not iterable — skipping
+
+[524] error: 'NoneType' object is not iterable — skipping
+
+[525] error: 'NoneType' object is not iterable — skipping
+
+[526] error: 'NoneType' object is not iterable — skipping
+
+[527] error: 'NoneType' object is not iterable — skipping
+
+[528] error: 'NoneType' object is not iterable — skipping
+
+[529] error: 'NoneType' object is not iterable — skipping
+
+[530] error: 'NoneType' object is not iterable — skipping
+
+[531] error: 'NoneType' object is not iterable — skipping
+
+[532] error: 'NoneType' object is not iterable — skipping
+
+[533] error: 'NoneType' object is not iterable — skipping
+
+[534] error: 'NoneType' object is not iterable — skipping
+
+[535] error: 'NoneType' object is not iterable — skipping
+
+[536] error: 'NoneType' object is not iterable — skipping
+
+[537] error: 'NoneType' object is not iterable — skipping
+
+[538] error: 'NoneType' object is not iterable — skipping
+
+[539] error: 'NoneType' object is not iterable — skipping
+
+[540] error: 'NoneType' object is not iterable — skipping
+
+[541] error: 'NoneType' object is not iterable — skippingGenerating:  24%|██▍       | 543/2244 [00:08<00:27, 61.46it/s]Generating:  25%|██▍       | 550/2244 [00:08<00:28, 59.50it/s]Generating:  25%|██▍       | 557/2244 [00:08<00:28, 59.55it/s]Generating:  25%|██▌       | 564/2244 [00:08<00:27, 60.90it/s]Generating:  25%|██▌       | 571/2244 [00:09<00:28, 59.36it/s]Generating:  26%|██▌       | 578/2244 [00:09<00:27, 61.58it/s]Generating:  26%|██▌       | 585/2244 [00:09<00:27, 60.79it/s]=============================
+Fri Mar 13 10:25:08 PM CET 2026
+Starting VRD pipeline for model: vila
+=============================
+
+>>> RUN: python scripts/evaluate_vrd_raw.py --task color --model_tag vila --max_new_tokens 4
+Task       : color
+Model tag  : vila
+CSV path   : /Data/masayo.tomita/VLM_probing/data/vrd_csv/vrd_color.csv
+Output CSV : /Data/masayo.tomita/VLM_probing/results/vrd_color/vila/raw_response_predictions.csv
+Loading model: a8cheng/SpatialRGPT-VILA1.5-8B
+Warning: The cache directory for DeepSpeed Triton autotune, /users/eleves-b/2025/masayo.tomita/.triton/autotune, appears to be on an NFS system. While this is generally acceptable, if you experience slowdowns or hanging when DeepSpeed exits, it is recommended to set the TRITON_CACHE_DIR environment variable to a non-NFS path.
+PS3 is not installed. Please install it using the following command:
+pip install ps3
+Fetching 20 files:   0%|          | 0/20 [00:00<?, ?it/s]Fetching 20 files: 100%|██████████| 20/20 [00:00<00:00, 105120.40it/s]
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:01<00:03,  1.11s/it]Loading checkpoint shards:  50%|█████     | 2/4 [00:02<00:02,  1.11s/it]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:02<00:00,  1.09it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.51it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:03<00:00,  1.26it/s]
+Some parameters are on the meta device because they were offloaded to the cpu.
+Generating:   0%|          | 0/2244 [00:00<?, ?it/s]Generating:   1%|          | 16/2244 [00:00<00:13, 159.42it/s]Generating:   2%|▏         | 35/2244 [00:00<00:12, 175.42it/s]image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[0] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[1] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[2] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[3] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[4] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[5] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[6] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[7] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[8] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[9] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[10] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[11] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[12] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[13] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[14] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[15] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[16] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[17] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[18] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[19] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[20] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[21] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[22] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[23] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[24] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[25] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[26] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[27] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[28] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[29] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[30] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[31] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[32] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[33] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[34] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[35] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[36] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[37] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[38] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[39] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[40] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[41] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[42] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[43] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[44] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[45] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[46] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[47] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[48] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio:Generating:   2%|▏         | 54/2244 [00:00<00:12, 177.67it/s]Generating:   3%|▎         | 73/2244 [00:00<00:12, 179.70it/s]Generating:   4%|▍         | 94/2244 [00:00<00:11, 187.33it/s] resize
+image_grid_pinpoints: None
+
+[49] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[50] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[51] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[52] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[53] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[54] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[55] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[56] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[57] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[58] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[59] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[60] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[61] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[62] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[63] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[64] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[65] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[66] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[67] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[68] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[69] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[70] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[71] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[72] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[73] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[74] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[75] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[76] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[77] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[78] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[79] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[80] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[81] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[82] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[83] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[84] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[85] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[86] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[87] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[88] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[89] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[90] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[91] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[92] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[93] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[94] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[95] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[96] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[97] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints:Generating:   5%|▌         | 113/2244 [00:00<00:11, 185.54it/s]Generating:   6%|▌         | 132/2244 [00:00<00:11, 181.47it/s] None
+
+[98] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[99] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[100] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[101] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[102] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[103] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[104] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[105] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[106] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[107] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[108] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[109] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[110] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[111] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[112] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[113] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[114] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[115] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[116] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[117] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[118] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[119] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[120] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[121] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[122] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[123] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[124] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[125] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[126] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[127] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[128] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[129] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[130] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[131] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[132] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[133] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[134] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[135] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[136] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[137] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[138] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[139] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[140] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[141] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[142] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[143] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[144] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[145] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[146] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio:Generating:   7%|▋         | 152/2244 [00:00<00:11, 185.11it/s]Generating:   8%|▊         | 171/2244 [00:00<00:11, 183.31it/s]Generating:   8%|▊         | 190/2244 [00:01<00:11, 177.92it/s] resize
+image_grid_pinpoints: None
+
+[147] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[148] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[149] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[150] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[151] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[152] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[153] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[154] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[155] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[156] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[157] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[158] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[159] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[160] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[161] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[162] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[163] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[164] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[165] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[166] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[167] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[168] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[169] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[170] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[171] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[172] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[173] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[174] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[175] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[176] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[177] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[178] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[179] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[180] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[181] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[182] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[183] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[184] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[185] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[186] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[187] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[188] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[189] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[190] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[191] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[192] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[193] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[194] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[195] error: cannot access local variable 'image_processor' where it is not associated with a value — skippingGenerating:   9%|▉         | 208/2244 [00:01<00:11, 177.02it/s]Generating:  10%|█         | 227/2244 [00:01<00:11, 178.32it/s]
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[196] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[197] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[198] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[199] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[200] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[201] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[202] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[203] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[204] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[205] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[206] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[207] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[208] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[209] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[210] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[211] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[212] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[213] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[214] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[215] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[216] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[217] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[218] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[219] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[220] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[221] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[222] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[223] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[224] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[225] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[226] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[227] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[228] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[229] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[230] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[231] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[232] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[233] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[234] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[235] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[236] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[237] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[238] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[239] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[240] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[241] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[242] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[243] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[244] error: cannot access local variable 'image_processor' where it is not associated with a value — skippingGenerating:  11%|█         | 245/2244 [00:01<00:11, 174.75it/s]Generating:  12%|█▏        | 263/2244 [00:01<00:11, 173.56it/s]Generating:  13%|█▎        | 283/2244 [00:01<00:10, 180.07it/s]
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[245] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[246] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[247] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[248] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[249] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[250] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[251] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[252] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[253] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[254] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[255] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[256] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[257] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[258] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[259] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[260] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[261] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[262] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[263] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[264] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[265] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[266] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[267] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[268] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[269] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[270] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[271] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[272] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[273] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[274] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[275] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[276] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[277] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[278] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[279] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[280] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[281] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[282] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[283] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[284] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[285] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[286] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[287] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[288] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[289] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[290] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[291] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[292] error: cannot access local variable 'image_processor' where it is not associated with a value — skipping
+image_aspect_ratio: resize
+image_grid_pinpoints: None
+
+[293] error: cannot access local variable 'image_processor' where it is not associated with a value — skippingGenerating:  13%|█▎        | 302/2244 [00:01<00:10, 178.14it/s]Generating:  14%|█▍        | 320/2244 [00:01<00:11, 170.03it/s]

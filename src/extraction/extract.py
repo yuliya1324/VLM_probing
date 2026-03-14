@@ -76,14 +76,23 @@ def build_prompt(sample: dict, task: str) -> str:
         raise ValueError(f"Unknown task: {task}")
 
 
-def get_label(sample: dict, task: str) -> str:
-    """Extract the ground-truth label from a metadata sample."""
+def get_label(row, task: str):
     if task == "spatial":
-        return sample["relation"]
+        return str(row["relationship"]).strip().lower()
     elif task == "color":
-        return sample["color_label"]
+        return str(row["color"]).strip().lower()
+    elif task == "shape":
+        return normalize_shape_label(row["shape"])
     else:
-        raise ValueError(f"Unknown task: {task}")
+        raise ValueError(f"Unsupported task: {task}")
+    
+def normalize_shape_label(label: str) -> str:
+    label = str(label).strip().lower()
+
+    if label == "round":
+        return "circular"
+
+    return label
 
 
 # ============================================================
@@ -111,7 +120,6 @@ def load_llava(model_id: str):
     processor = AutoProcessor.from_pretrained(model_id)
     return model, processor
 
-
 def load_vila(model_id: str):
     """Load VILA / SpatialRGPT model using VILA's custom builder.
 
@@ -120,6 +128,8 @@ def load_vila(model_id: str):
     different return shape, handled by the VILA-specific extract path.
     """
     import os
+    import torch
+
     os.environ["FLASH_ATTENTION_2"] = "0"
     os.environ["TRANSFORMERS_ATTENTION_IMPLEMENTATION"] = "sdpa"
 
@@ -131,10 +141,26 @@ def load_vila(model_id: str):
         model_name=model_id,
         model_base=None,
         device=device,
-        device_map="auto",
+        device_map=None,   # IMPORTANT: avoid accelerate auto-sharding hooks
     )
+
+    #model = model.to(device)
     model.eval()
-    # Pack extras into processor slot for registry compatibility
+    
+    # Force image-side modules onto the same device
+    vt_device = next(model.get_vision_tower().parameters()).device
+
+    if hasattr(model, "encoders") and "image" in model.encoders:
+        model.encoders["image"] = model.encoders["image"].to(vt_device)
+
+    if hasattr(model, "mm_projector"):
+        model.mm_projector = model.mm_projector.to(vt_device)
+
+    if hasattr(model, "llm"):
+        model.llm.resize_token_embeddings(len(tokenizer))
+        if hasattr(model.llm, "tie_weights"):
+            model.llm.tie_weights()
+
     return model, (device, tokenizer, image_processor)
 
 

@@ -103,17 +103,21 @@ def build_prompt(row, task: str) -> str:
     else:
         raise ValueError(f"Unsupported task: {task}")
 
+def normalize_shape_label(label: str) -> str:
+    label = str(label).strip().lower()
+    if label == "round":
+        return "circular"
+    return label
 
 def get_label(row, task: str):
     if task == "spatial":
-        return row["relationship"]
+        return str(row["relationship"]).strip().lower()
     elif task == "color":
-        return row["color"]
+        return str(row["color"]).strip().lower()
     elif task == "shape":
-        return row["shape"]
+        return normalize_shape_label(row["shape"])
     else:
         raise ValueError(f"Unsupported task: {task}")
-
 
 def get_sample_id(row, task: str) -> str:
     image_path = str(get_image_path(row))
@@ -123,7 +127,8 @@ def get_sample_id(row, task: str) -> str:
     elif task == "color":
         return f"{image_path}||{row['obj']}||{row['color']}"
     elif task == "shape":
-        return f"{image_path}||{row['obj']}||{row['shape']}"
+        shape = normalize_shape_label(row["shape"])
+        return f"{image_path}||{row['obj']}||{shape}"
     else:
         raise ValueError(f"Unsupported task: {task}")
 
@@ -161,7 +166,12 @@ def merge_chunks(chunk_dir, output_path):
         data = np.load(chunk_file, allow_pickle=True)
         all_reprs.append(data["representations"])
         all_labels.append(data["labels"])
-        all_ids.append(data["sample_ids"])
+        if "sample_ids" in data.files:
+            all_ids.append(data["sample_ids"])
+        elif "image_ids" in data.files:
+            all_ids.append(data["image_ids"])
+        else:
+            raise KeyError(f"No id field in {chunk_file}")
 
     representations = np.concatenate(all_reprs, axis=0)
     labels = np.concatenate(all_labels, axis=0)

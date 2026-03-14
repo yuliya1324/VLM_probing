@@ -20,6 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.dataset_generation.spatial import generate_spatial_dataset
 from src.dataset_generation.color import generate_color_dataset
+from src.dataset_generation.shape import generate_shape_dataset
 
 
 def split_dataset(metadata_path: str, output_dir: str, train_ratio: float = 0.8, seed: int = 42):
@@ -52,7 +53,7 @@ def split_dataset(metadata_path: str, output_dir: str, train_ratio: float = 0.8,
 def main():
     parser = argparse.ArgumentParser(description="Generate synthetic probing datasets")
     parser.add_argument("--config", type=str, help="Path to YAML config file")
-    parser.add_argument("--task", type=str, choices=["spatial", "color"], help="Task (overrides config)")
+    parser.add_argument("--task", type=str, choices=["spatial", "color", "shape"], help="Task (overrides config)")
     parser.add_argument("--n_samples", type=int, help="Number of samples (overrides config)")
     parser.add_argument("--seed", type=int, help="Random seed (overrides config)")
     parser.add_argument("--output_dir", type=str, help="Output directory (overrides config)")
@@ -82,23 +83,25 @@ def main():
             prompt_template_index=prompt_idx,
         )
     elif task == "color":
-        prompt_idx = cfg.get("prompt_template_index", None)
         samples = generate_color_dataset(
             n_samples=n_samples,
             output_dir=output_dir,
             seed=seed,
             min_shapes=cfg.get("min_shapes", 1),
             max_shapes=cfg.get("max_shapes", 3),
-            prompt_template_index=prompt_idx,
+        )
+    elif task == "shape":
+        samples = generate_shape_dataset(
+            n_samples=n_samples,
+            output_dir=output_dir,
+            seed=seed,
         )
     else:
         raise ValueError(f"Unknown task: {task}")
 
     # Print class distribution
-    if task == "spatial":
-        label_key = "relation"
-    else:
-        label_key = "color_label"
+    label_keys = {"spatial": "relation", "color": "color_label", "shape": "shape_label"}
+    label_key = label_keys[task]
 
     from collections import Counter
     dist = Counter(s[label_key] for s in samples)
