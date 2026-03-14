@@ -39,12 +39,13 @@ from scripts.extract_vrd import (
     get_sample_id,
 )
 
-
 # ============================================================
 # Label normalization / parsing
 # ============================================================
 ALIAS_TO_CANONICAL = {
     "spatial": {
+        "left_of": "left of",
+        "right_of": "right of",
         "left of": "left of",
         "right of": "right of",
         "above": "above",
@@ -144,8 +145,12 @@ def flush_rows(rows: list[dict], output_csv: Path) -> None:
         out_df.to_csv(output_csv, mode="a", header=False, index=False)
     else:
         out_df.to_csv(output_csv, index=False)
-
-
+        
+# ============================================================
+# VILA raw generation helper
+# Adapted from Iuliia's steering demo implementation
+# (src/steering/steer.py::_generate_vila)
+# ============================================================
 @torch.inference_mode()
 def generate_single_vila(
     model,
@@ -158,15 +163,16 @@ def generate_single_vila(
     from llava.mm_utils import tokenizer_image_token
     from llava.constants import DEFAULT_IMAGE_TOKEN
 
-    device, tokenizer, image_processor = processor_tuple
+    _, tokenizer, image_processor = processor_tuple
 
-    # one single device for everything
-    target_device = model.llm.model.embed_tokens.weight.device
+    # Use actual module devices instead of trusting processor_tuple[0]
+    text_device = model.llm.model.embed_tokens.weight.device
+    vision_device = next(model.get_vision_tower().parameters()).device
 
     image = image.convert("RGB")
     img_t = image_processor(image, return_tensors="pt")["pixel_values"][0].to(
-        device=target_device, dtype=torch.float16
-    )
+        vision_device
+    ).half()
 
     media = {"image": [img_t]}
     media_config = {"image": {}}
@@ -174,7 +180,6 @@ def generate_single_vila(
     chat_prompt = f"USER: <image>\n{prompt}\nASSISTANT:"
 
     image_token_id = tokenizer.convert_tokens_to_ids(DEFAULT_IMAGE_TOKEN)
-
     sig = inspect.signature(tokenizer_image_token)
     param_names = list(sig.parameters.keys())
 
@@ -194,30 +199,25 @@ def generate_single_vila(
     input_ids = tokenizer_image_token(*args, **kwargs)
     if input_ids.dim() == 1:
         input_ids = input_ids.unsqueeze(0)
-    input_ids = input_ids.to(target_device)
+    input_ids = input_ids.to(text_device)
 
-    attention_mask = torch.ones_like(input_ids, device=target_device)
+    attention_mask = torch.ones_like(input_ids, device=text_device)
 
-    generated_ids = model.generate(
+    output_ids = model.generate(
         input_ids=input_ids,
         media=media,
         media_config=media_config,
         attention_mask=attention_mask,
-        do_sample=False,
         max_new_tokens=max_new_tokens,
-        use_cache=True,
+        do_sample=False,
         pad_token_id=tokenizer.pad_token_id if tokenizer.pad_token_id is not None else tokenizer.eos_token_id,
         eos_token_id=tokenizer.eos_token_id,
     )
 
-    raw_text = tokenizer.batch_decode(
-        generated_ids[:, input_ids.shape[1]:],
-        skip_special_tokens=True,
-    )[0].strip()
-
-    return raw_text
+    input_len = input_ids.shape[1]
+    text = tokenizer.decode(output_ids[0, input_len:], skip_special_tokens=True)
+    return text.strip()
     
-
 @torch.inference_mode()
 def generate_single(
     model,

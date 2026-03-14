@@ -15,18 +15,13 @@ Usage:
         model_id="Qwen/Qwen2-VL-7B-Instruct",
         task="spatial",
     )
-    
-03.09: for QWEN2 OOM:
-- load model with float16
-- ensmall input pictures
 """
 
 from __future__ import annotations
 
 import json
-import re
 from pathlib import Path
-from typing import Optional, Callable, Dict, Any
+from typing import Optional, Dict, Any
 
 import numpy as np
 import torch
@@ -36,12 +31,6 @@ from PIL import Image
 # ============================================================
 # Prompt templates
 # ============================================================
-
-PROMPT_TEMPLATES = [
-    "The spatial relationship of {subj} to {obj} is",
-    "Considering the image, the {subj} is positioned ___ the {obj}. The answer is",
-    "Where is the {subj} relative to the {obj}? The {subj} is",
-]
 
 SPATIAL_PROMPT = (
     "Determine the spatial relationship of '{subj}' relative to '{obj}'.\n"
@@ -55,9 +44,17 @@ COLOR_PROMPT = (
     "Respond with ONLY the color name. No explanation."
 )
 
+SHAPE_PROMPT = (
+    "What is the shape of the {color} object in the image?\n"
+    "Choose ONE label from:\n"
+    "[circular, oval, square, rectangular, triangular]\n"
+    "Respond with ONLY the label. No explanation."
+)
+
 PROMPT_TEMPLATES = {
     "spatial": SPATIAL_PROMPT,
     "color": COLOR_PROMPT,
+    "shape": SHAPE_PROMPT,
 }
 
 
@@ -72,27 +69,23 @@ def build_prompt(sample: dict, task: str) -> str:
     elif task == "color":
         subj = sample["shape_type"]
         return template.format(subj=subj)
+    elif task == "shape":
+        color = sample["color_name"]
+        return template.format(color=color)
     else:
         raise ValueError(f"Unknown task: {task}")
 
 
-def get_label(row, task: str):
+def get_label(sample: dict, task: str) -> str:
+    """Extract the ground-truth label from a metadata sample."""
     if task == "spatial":
-        return str(row["relationship"]).strip().lower()
+        return sample["relation"]
     elif task == "color":
-        return str(row["color"]).strip().lower()
+        return sample["color_label"]
     elif task == "shape":
-        return normalize_shape_label(row["shape"])
+        return sample["shape_label"]
     else:
-        raise ValueError(f"Unsupported task: {task}")
-    
-def normalize_shape_label(label: str) -> str:
-    label = str(label).strip().lower()
-
-    if label == "round":
-        return "circular"
-
-    return label
+        raise ValueError(f"Unknown task: {task}")
 
 
 # ============================================================
@@ -103,7 +96,7 @@ def load_qwen2vl(model_id: str):
     from transformers import Qwen2VLForConditionalGeneration, AutoProcessor
 
     model = Qwen2VLForConditionalGeneration.from_pretrained(
-        model_id, device_map="auto", torch_dtype=torch.float16, # for OOM
+        model_id, device_map="auto", torch_dtype="auto",
     )
     model.eval()
     processor = AutoProcessor.from_pretrained(model_id)
@@ -120,6 +113,7 @@ def load_llava(model_id: str):
     processor = AutoProcessor.from_pretrained(model_id)
     return model, processor
 
+
 def load_vila(model_id: str):
     """Load VILA / SpatialRGPT model using VILA's custom builder.
 
@@ -128,8 +122,6 @@ def load_vila(model_id: str):
     different return shape, handled by the VILA-specific extract path.
     """
     import os
-    import torch
-
     os.environ["FLASH_ATTENTION_2"] = "0"
     os.environ["TRANSFORMERS_ATTENTION_IMPLEMENTATION"] = "sdpa"
 
@@ -141,26 +133,10 @@ def load_vila(model_id: str):
         model_name=model_id,
         model_base=None,
         device=device,
-        device_map=None,   # IMPORTANT: avoid accelerate auto-sharding hooks
+        device_map="auto",
     )
-
-    #model = model.to(device)
     model.eval()
-    
-    # Force image-side modules onto the same device
-    vt_device = next(model.get_vision_tower().parameters()).device
-
-    if hasattr(model, "encoders") and "image" in model.encoders:
-        model.encoders["image"] = model.encoders["image"].to(vt_device)
-
-    if hasattr(model, "mm_projector"):
-        model.mm_projector = model.mm_projector.to(vt_device)
-
-    if hasattr(model, "llm"):
-        model.llm.resize_token_embeddings(len(tokenizer))
-        if hasattr(model.llm, "tie_weights"):
-            model.llm.tie_weights()
-
+    # Pack extras into processor slot for registry compatibility
     return model, (device, tokenizer, image_processor)
 
 
@@ -184,8 +160,6 @@ MODEL_REGISTRY: Dict[str, Dict[str, Any]] = {
 
 def prepare_inputs_qwen2(processor, prompt: str, image: Image.Image, device: torch.device) -> dict:
     """Prepare inputs for Qwen2-VL using its chat template."""
-    image = image.copy()
-    image.thumbnail((448, 448))
     messages = [
         {
             "role": "user",
@@ -199,8 +173,7 @@ def prepare_inputs_qwen2(processor, prompt: str, image: Image.Image, device: tor
         messages, add_generation_prompt=True, tokenize=False,
     )
     inputs = processor(text=[text], images=[image], return_tensors="pt")
-    return inputs
-    #return {k: (v.to(device) if torch.is_tensor(v) else v) for k, v in inputs.items()}
+    return {k: (v.to(device) if torch.is_tensor(v) else v) for k, v in inputs.items()}
 
 
 def prepare_inputs_llava(processor, prompt: str, image: Image.Image, device: torch.device) -> dict:
@@ -240,7 +213,7 @@ def _extract_single_vila(
 
     device, tokenizer, image_processor = processor_tuple
 
-    # Process image
+    # Process image — match vision tower dtype (float16)
     img_t = image_processor(image, return_tensors="pt")["pixel_values"][0].to(device).half()
     media = {"image": [img_t]}
     media_config = {"image": {}}
@@ -353,7 +326,6 @@ def extract_dataset(
     model_id: Optional[str] = None,
     task: str = "spatial",
     limit: Optional[int] = None,
-    random_prompt: bool = False,
 ) -> np.ndarray:
     """Extract representations for an entire synthetic dataset.
 
@@ -395,10 +367,7 @@ def extract_dataset(
     for i, sample in enumerate(metadata):
         image_path = Path(images_dir) / sample["image_filename"]
         image = Image.open(image_path).convert("RGB")
-        # if random_prompt:
         prompt = build_prompt(sample, task)
-        # else:
-            # prompt = sample["prompt"] + " "
         label = get_label(sample, task)
 
         try:
