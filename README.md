@@ -4,8 +4,6 @@ Probing Vision-Language Models' internal representations for spatial relationshi
 
 *The work is done by [Iuliia Korotkova](https://github.com/yuliya1324) and [Masayo Tomita](https://github.com/MTomita143)*
 
-
-
 --------------------------------------------------------------------------------
 Project Structure
 --------------------------------------------------------------------------------
@@ -67,46 +65,20 @@ Project Structure
 │   │   └── shape/
 │   └── vrd/
 │       ├── spatial/
+|       |    ├── qwen2/
+|       |    |    ├── representations.npz
+|       |    |    ├── raw_response_predictions.csv
+|       |    |    ├── probe_predictions.csv
+|       |    |    └── correct/
+|       |    |      ├── representations.npz
+|       |    |      └── probes/
+|       |    └── llava/
 │       ├── color/
 │       └── shape/
-│
 ├── notebooks/
 ├── requirements.txt
 ├── requirements-extract.txt
 └── README.md
-```
---------------------------------------------------------------------------------
-Results Directory Convention
---------------------------------------------------------------------------------
-
-Results are organized by:
-
-`results/<dataset>/<task>/<model_tag>/`
-
-Examples:
-```
-results/synthetic/color/qwen2/
-results/synthetic/spatial/llava15/
-results/vrd/color/qwen2/
-results/vrd/spatial/vila/
-```
-Typical contents:
-```
-results/synthetic/color/qwen2/
-├── probes/
-├── representations.npz
-├── probe_results.json
-├── eval_all_layers.png
-└── eval_results.json
-
-results/vrd/color/qwen2/
-├── representations.npz
-├── raw_response_predictions.csv
-├── probe_predictions.csv
-└── correct/
-    ├── representations.npz
-    ├── probes/
-    └── eval_with_synth_probes.png
 ```
 --------------------------------------------------------------------------------
 Pipeline
@@ -209,9 +181,7 @@ python src/data_preprocessing/build_task_csv.py --task spatial
 python src/data_preprocessing/build_task_csv.py --task color
 python src/data_preprocessing/build_task_csv.py --task shape
 ```
-The resulting files are stored in:
-
-`data/processed/vrd/csv/`
+The resulting files are stored in: `data/processed/vrd/csv/`
 
 Notes:
 - spatial labels are already normalized to left_of, right_of, above, below
@@ -256,9 +226,7 @@ python scripts/extract_vrd.py \
     --task spatial \
     --model_tag qwen2
 ```
-This writes by default to:
-
-results/vrd/spatial/qwen2/representations.npz
+This writes by default to: `results/vrd/spatial/qwen2/representations.npz`
 
 Likewise for color and shape.
 
@@ -284,9 +252,7 @@ python scripts/evaluate.py \
     --labels "Qwen2-VL" "SpatialRGPT-VILA" \
     --output results/synthetic/spatial/comparison.png
 ```
-If --representations is omitted, the script will look for:
-
-`<Path to probes parent>/representations.npz`
+If --representations is omitted, the script will look for:`<Path to probes parent>/representations.npz`
 
 --------------------------------------------------------------------------------
 Evaluate Raw VLM Accuracy on VRD
@@ -306,9 +272,7 @@ python scripts/evaluate_vrd_raw.py \
     --model_tag qwen2 \
     --max_new_tokens 6
 ```
-Default output:
-
-`results/vrd/<task>/<model_tag>/raw_response_predictions.csv`
+Default output: `results/vrd/<task>/<model_tag>/raw_response_predictions.csv`
 
 --------------------------------------------------------------------------------
 Evaluate Probe Predictions on VRD
@@ -330,112 +294,8 @@ python scripts/evaluate_vrd_probe.py \
     --probes_dir results/synthetic/color/qwen2/probes \
     --layer 24
 ```
-Default output:
+Default output: `results/vrd/<task>/<model_tag>/probe_predictions.csv`
 
-`results/vrd/<task>/<model_tag>/probe_predictions.csv`
-
---------------------------------------------------------------------------------
-Steering
---------------------------------------------------------------------------------
-
-This repository also supports representation steering: using probe-derived
-directions to intervene in a model's hidden states and bias its output toward a
-target concept.
-
-Typical use cases include:
-
-- steering a model toward a target spatial relation such as left_of
-- contrasting two classes by pushing one direction and suppressing another
-- sweeping the steering strength alpha to study how intervention magnitude
-  affects outputs
-
-The main steering script is:
-
-`scripts/steer.py`
-
-Basic steering:
-```
-python scripts/steer.py \
-    --model_tag qwen2 \
-    --image_path data/raw/synthetic/spatial/images/spatial_00042.png \
-    --prompt "Where is the red circle relative to the blue square?" \
-    --probes_dir results/synthetic/spatial/qwen2/probes \
-    --layers 11 18 20 \
-    --target left_of \
-    --alpha 10
-```
-This applies steering at the specified layer(s) using the direction associated
-with the target class.
-
-Contrastive steering:
-```
-python scripts/steer.py \
-    --model_tag qwen2 \
-    --image_path data/raw/synthetic/spatial/images/spatial_00042.png \
-    --prompt "Where is the red circle relative to the blue square?" \
-    --probes_dir results/synthetic/spatial/qwen2/probes \
-    --layers 20 \
-    --target left_of \
-    --source right_of \
-    --alpha 10
-```
-This is useful for testing more targeted interventions, for example:
-
-- push left_of
-- suppress right_of
-
-Sweep over alpha:
-```
-python scripts/steer.py \
-    --model_tag qwen2 \
-    --image_path data/raw/synthetic/spatial/images/spatial_00042.png \
-    --prompt "Where is the red circle relative to the blue square?" \
-    --probes_dir results/synthetic/spatial/qwen2/probes \
-    --layers 20 \
-    --target left_of \
-    --sweep
-```
-This runs the same steering setup over multiple alpha values to help identify a
-useful intervention range.
-
-Notes:
-
-- --layers can be a single layer or multiple layers
-- --target should match a probe class label
-- --source is optional and enables contrastive steering
-- steering behavior depends strongly on layer choice and steering strength
-- probe quality matters: better probe directions usually yield more
-  interpretable steering
-
---------------------------------------------------------------------------------
-Steering Evaluation
---------------------------------------------------------------------------------
-
-A separate script is available for quantitative steering evaluation:
-
-scripts/evaluate_steering.py
-
-This can be used to measure effects such as:
-
-- baseline accuracy
-- accuracy when steering toward the ground-truth class
-- accuracy when steering toward a wrong class
-- target hit rate
-- gibberish rate
-
-Example:
-```
-python scripts/evaluate_steering.py \
-    --probes_dir results/synthetic/spatial/qwen2/probes \
-    --data_dir data/raw/synthetic/spatial \
-    --task spatial \
-    --model_tag qwen2 \
-    --layers 20 \
-    --alphas 0 1 2 5 10 20 \
-    --output results/synthetic/spatial/qwen2/steering_eval.json \
-    --plot results/synthetic/spatial/qwen2/steering_eval.png \
-    --limit 100
-```
 --------------------------------------------------------------------------------
 Re-evaluate Synthetic Probes on the VRD Correct Subset
 --------------------------------------------------------------------------------
@@ -503,6 +363,22 @@ python scripts/evaluate.py \
     --split all \
     --output results/vrd/spatial/qwen2/mixed/eval_on_full_vrd.png
 ```
+--------------------------------------------------------------------------------
+Steering Evaluation
+--------------------------------------------------------------------------------
+```
+python scripts/evaluate_steering.py \
+    --probes_dir results/synthetic/spatial/qwen2/probes \
+    --data_dir data/raw/synthetic/spatial \
+    --task spatial \
+    --model_tag qwen2 \
+    --layers 20 \
+    --alphas 0 1 2 5 10 20 \
+    --output results/synthetic/spatial/qwen2/steering_eval.json \
+    --plot results/synthetic/spatial/qwen2/steering_eval.png \
+    --limit 100
+```
+
 --------------------------------------------------------------------------------
 Notes
 --------------------------------------------------------------------------------
