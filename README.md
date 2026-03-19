@@ -7,14 +7,19 @@ Probing Vision-Language Models' internal representations for spatial relationshi
 ## Project Structure
 
 ```
-vlm-spatial-probing/
+../
 ├── configs/                    # YAML configs for dataset generation & experiments
 │   ├── spatial_dataset.yaml
 │   └── color_dataset.yaml
-├── data/
-│   ├── raw/                    # Generated images
-│        └── vrd                # Dataset - Visual Relationship Detection
-│   └── splits/                 # Train/val JSON splits
+│   data/
+│   ├── raw/
+│   │   ├── synthetic/          # Generated images
+│   │   └── vrd/                # Dataset - Visual Relationship Detection
+│   ├── processed/
+│   │   └── vrd/
+│   │       ├── csv/
+│   │       └── metadata/
+│   └── splits/                  # Train/val JSON splits
 ├── src/
 │   ├── dataset_generation/     # Synthetic image + label generation
 │   │   ├── spatial.py          # Spatial relationship dataset
