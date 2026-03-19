@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+# scripts/evaluate_steering.py
 """Evaluate steering quality with quantitative metrics.
 
 Computes for each alpha value:
@@ -10,13 +10,13 @@ Computes for each alpha value:
 
 Usage:
     python scripts/evaluate_steering.py \
-        --probes_dir results/qwen2_spatial/probes \
-        --data_dir data/raw/spatial \
+        --probes_dir results/synthetic/spatial/qwen2/probes \
+        --data_dir data/raw/synthetic/spatial \
         --task spatial \
         --model_tag qwen2 \
         --layers 20 \
         --alphas 0 1 2 5 10 20 50 \
-        --output results/qwen2_spatial/steering_eval.json \
+        --output results/vrd/spatial/qwen2/steering_eval.json \
         --limit 100
 """
 
@@ -34,8 +34,32 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import torch
 from PIL import Image
 
-from src.extraction.extract import MODEL_REGISTRY, build_prompt, get_label
+from src.extraction.extract import MODEL_REGISTRY
 from src.steering.steer import SteeringManager, _generate
+
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DATA_ROOT = PROJECT_ROOT / "data" / "raw" / "synthetic"
+
+TASK_TO_DATA_DIR = {
+    "spatial": DATA_ROOT / "spatial",
+    "color": DATA_ROOT / "color",
+    "shape": DATA_ROOT / "shape",
+}
+
+RESULTS_DIR = PROJECT_ROOT / "results"
+
+TASK_TO_DEFAULT_OUTPUT = {
+    "spatial": lambda model_tag: RESULTS_DIR / "synthetic" / "spatial" / model_tag / "steering_eval.json",
+    "color": lambda model_tag: RESULTS_DIR / "synthetic" / "color" / model_tag / "steering_eval.json",
+    "shape": lambda model_tag: RESULTS_DIR / "synthetic" / "shape" / model_tag / "steering_eval.json",
+}
+
+TASK_TO_DEFAULT_PLOT = {
+    "spatial": lambda model_tag: RESULTS_DIR / "synthetic" / "spatial" / model_tag / "steering_eval.png",
+    "color": lambda model_tag: RESULTS_DIR / "synthetic" / "color" / model_tag / "steering_eval.png",
+    "shape": lambda model_tag: RESULTS_DIR / "synthetic" / "shape" / model_tag / "steering_eval.png",
+}
 
 # ============================================================
 # delete warning message
@@ -125,35 +149,20 @@ def parse_response(response: str, task: str) -> dict:
 def get_label_from_metadata(sample: dict, task: str) -> str:
     if task == "color":
         return str(sample["color_label"]).strip().lower()
-    elif task == "shape":
+    if task == "shape":
         return str(sample["shape_label"]).strip().lower()
-    elif task == "spatial":
-        label = str(sample["relation"]).strip().lower()
-        return LABEL_NORMALIZE.get(label, label)
-    else:
-        raise ValueError(f"Unknown task: {task}")
+    if task == "spatial":
+        return str(sample["relation"]).strip().lower()
+
+    raise ValueError(f"Unknown task: {task}")
 
 
 def get_prompt_from_metadata(sample: dict, task: str) -> str:
     if "prompt" in sample:
         return sample["prompt"].strip()
-    raise KeyError(f"No prompt field found in metadata for task={task}")
 
-def canonicalize_label(label: str) -> str:
-    label = str(label).strip().lower()
-    mapping = {
-        "left of": "left_of",
-        "right of": "right_of",
-        "left_of": "left_of",
-        "right_of": "right_of",
-        "above": "above",
-        "below": "below",
-    }
-    return mapping.get(label, label)
-
-def get_probe_classes(probes_dir: str) -> list[str]:
-    le = joblib.load(Path(probes_dir) / "label_encoder.joblib")
-    return [canonicalize_label(c) for c in le.classes_]
+    from src.extraction.extract import build_prompt
+    return build_prompt(sample, task)
 
 # ============================================================
 # Evaluation
@@ -204,8 +213,8 @@ def evaluate_steering(
             else:
                 image_path = Path(images_dir) / sample["image_filename"]
             image = Image.open(image_path).convert("RGB")
-            #prompt = build_prompt(sample, task)
-            #gt_label = get_label(sample, task)
+            image = image.resize((224, 224))
+
             prompt = get_prompt_from_metadata(sample, task)
             gt_label = get_label_from_metadata(sample, task)
 
@@ -379,7 +388,7 @@ def plot_steering_eval(results: dict, output_path: str = None):
 def main():
     parser = argparse.ArgumentParser(description="Evaluate steering quality")
     parser.add_argument("--probes_dir", type=str, required=True)
-    parser.add_argument("--data_dir", type=str, required=True)
+    parser.add_argument("--data_dir", type=str, default=None)
     parser.add_argument("--task", type=str, required=True, choices=["spatial", "color", "shape"])
     parser.add_argument("--model_tag", type=str, required=True)
     parser.add_argument("--model_id", type=str, default=None)
@@ -393,7 +402,9 @@ def main():
     args = parser.parse_args()
 
     # Load metadata
-    data_dir = Path(args.data_dir)
+    data_dir = Path(args.data_dir) if args.data_dir else TASK_TO_DATA_DIR[args.task]
+    output_path = Path(args.output) if args.output else TASK_TO_DEFAULT_OUTPUT[args.task](args.model_tag)
+    plot_path = Path(args.plot) if args.plot else TASK_TO_DEFAULT_PLOT[args.task](args.model_tag)
     with open(data_dir / "metadata.json") as f:
         metadata = json.load(f)
     if args.limit:
@@ -415,16 +426,14 @@ def main():
         max_new_tokens=args.max_new_tokens,
     )
 
-    # Save
-    if args.output:
-        Path(args.output).parent.mkdir(parents=True, exist_ok=True)
-        with open(args.output, "w") as f:
-            json.dump(results, f, indent=2, default=str)
-        print(f"\nSaved results → {args.output}")
+    # Save JSON
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w") as f:
+        json.dump(results, f, indent=2, default=str)
+    print(f"\nSaved results → {output_path}")
 
-    # Plot
-    if args.plot:
-        plot_steering_eval(results, args.plot)
+    # Save plot
+    plot_steering_eval(results, str(plot_path))
 
 
 if __name__ == "__main__":

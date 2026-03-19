@@ -5,9 +5,9 @@ Keeps only samples where raw VLM response was correct.
 
 Usage:
     python scripts/make_correct_subset.py \
-        --pred_csv results/vrd_color/qwen2/raw_response_predictions.csv \
-        --repr_npz results/vrd_color/qwen2/representations.npz \
-        --out_npz  results/vrd_color/qwen2/representations_correct.npz
+        --pred_csv results/vrd/color/qwen2/raw_response_predictions.csv \
+        --repr_npz results/vrd/color/qwen2/representations.npz \
+        --out_npz  results/vrd/color/qwen2/representations_correct.npz
 """
 
 import argparse

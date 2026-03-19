@@ -1,18 +1,15 @@
 """Extract last-token hidden states from VLMs for probing.
 
-Core function borrowed from Masayo's extract_qwen2.py, generalized to:
-  - Read directly from our metadata.json (no CSV conversion needed)
-  - Support multiple models via a registry
-  - Use task-appropriate prompt templates (spatial / color)
+Core extraction utilities for metadata-based datasets.
 
 Usage:
-    from src.extraction.extract import extract_dataset
+    from src.extraction.extract import extract_metadata_dataset
 
-    extract_dataset(
-        metadata_path="data/raw/spatial/metadata.json",
-        images_dir="data/raw/spatial/images",
+    extract_metadata_dataset(
+        metadata_path="data/raw/synthetic/spatial/metadata.json",
+        images_dir="data/raw/synthetic/spatial/images",
         output_path="data/processed/qwen2_spatial.npz",
-        model_id="Qwen/Qwen2-VL-7B-Instruct",
+        model_tag="qwen2",
         task="spatial",
     )
 """
@@ -66,26 +63,47 @@ def build_prompt(sample: dict, task: str) -> str:
         subj = f"{sample['subject_color']} {sample['subject_shape']}"
         obj = f"{sample['reference_color']} {sample['reference_shape']}"
         return template.format(subj=subj, obj=obj)
-    elif task == "color":
+    if task == "color":
         subj = sample["shape_type"]
         return template.format(subj=subj)
-    elif task == "shape":
+    if task == "shape":
         color = sample["color_name"]
         return template.format(color=color)
-    else:
-        raise ValueError(f"Unknown task: {task}")
+
+    raise ValueError(f"Unknown task: {task}")
+
+
+def get_random_prompt(task: str) -> str:
+    """Return a label-agnostic control prompt for a given task."""
+    if task == "spatial":
+        return (
+            "Look at the image and answer with one word.\n"
+            "Respond with ONLY one label. No explanation."
+        )
+    if task == "color":
+        return (
+            "Look at the image and answer with one color word.\n"
+            "Respond with ONLY the color name. No explanation."
+        )
+    if task == "shape":
+        return (
+            "Look at the image and answer with one shape word.\n"
+            "Respond with ONLY one label. No explanation."
+        )
+
+    raise ValueError(f"Unknown task: {task}")
 
 
 def get_label(sample: dict, task: str) -> str:
     """Extract the ground-truth label from a metadata sample."""
     if task == "spatial":
         return sample["relation"]
-    elif task == "color":
+    if task == "color":
         return sample["color_label"]
-    elif task == "shape":
+    if task == "shape":
         return sample["shape_label"]
-    else:
-        raise ValueError(f"Unknown task: {task}")
+
+    raise ValueError(f"Unknown task: {task}")
 
 
 # ============================================================
@@ -96,7 +114,9 @@ def load_qwen2vl(model_id: str):
     from transformers import Qwen2VLForConditionalGeneration, AutoProcessor
 
     model = Qwen2VLForConditionalGeneration.from_pretrained(
-        model_id, device_map="auto", torch_dtype="auto",
+        model_id,
+        device_map="auto",
+        torch_dtype="auto",
     )
     model.eval()
     processor = AutoProcessor.from_pretrained(model_id)
@@ -107,7 +127,9 @@ def load_llava(model_id: str):
     from transformers import LlavaForConditionalGeneration, AutoProcessor
 
     model = LlavaForConditionalGeneration.from_pretrained(
-        model_id, device_map="auto", torch_dtype="auto",
+        model_id,
+        device_map="auto",
+        torch_dtype="auto",
     )
     model.eval()
     processor = AutoProcessor.from_pretrained(model_id)
@@ -118,17 +140,17 @@ def load_vila(model_id: str):
     """Load VILA / SpatialRGPT model using VILA's custom builder.
 
     Requires VILA to be installed: pip install -e ./VILA --no-deps
-    Returns (model, (device, tokenizer, image_processor)) — note the
-    different return shape, handled by the VILA-specific extract path.
+    Returns (model, (device, tokenizer, image_processor)).
     """
     import os
+
     os.environ["FLASH_ATTENTION_2"] = "0"
     os.environ["TRANSFORMERS_ATTENTION_IMPLEMENTATION"] = "sdpa"
 
     from llava.model.builder import load_pretrained_model
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    tokenizer, model, image_processor, context_len = load_pretrained_model(
+    tokenizer, model, image_processor, _ = load_pretrained_model(
         model_path=model_id,
         model_name=model_id,
         model_base=None,
@@ -136,12 +158,9 @@ def load_vila(model_id: str):
         device_map="auto",
     )
     model.eval()
-    # Pack extras into processor slot for registry compatibility
     return model, (device, tokenizer, image_processor)
 
 
-# Maps a short tag → (loader_fn, input_builder_fn)
-# input_builder_fn: (processor, prompt, image) → dict of model inputs
 MODEL_REGISTRY: Dict[str, Dict[str, Any]] = {
     "qwen2": {
         "loader": load_qwen2vl,
@@ -170,7 +189,9 @@ def prepare_inputs_qwen2(processor, prompt: str, image: Image.Image, device: tor
         }
     ]
     text = processor.apply_chat_template(
-        messages, add_generation_prompt=True, tokenize=False,
+        messages,
+        add_generation_prompt=True,
+        tokenize=False,
     )
     inputs = processor(text=[text], images=[image], return_tensors="pt")
     return {k: (v.to(device) if torch.is_tensor(v) else v) for k, v in inputs.items()}
@@ -200,28 +221,19 @@ def _extract_single_vila(
     image: Image.Image,
     prompt: str,
 ) -> np.ndarray:
-    """Extract last-token hidden states from VILA / SpatialRGPT.
-
-    VILA uses a custom forward path:
-      1. Tokenize with image tokens via tokenizer_image_token
-      2. Embed via model._embed (fuses image + text)
-      3. Forward through model.llm.model (the inner LLM)
-    """
+    """Extract last-token hidden states from VILA / SpatialRGPT."""
     import inspect
     from llava.mm_utils import tokenizer_image_token
     from llava.constants import DEFAULT_IMAGE_TOKEN
 
     device, tokenizer, image_processor = processor_tuple
 
-    # Process image — match vision tower dtype (float16)
     img_t = image_processor(image, return_tensors="pt")["pixel_values"][0].to(device).half()
     media = {"image": [img_t]}
     media_config = {"image": {}}
 
-    # Wrap prompt in LLaVA chat format
     chat_prompt = f"USER: <image>\n{prompt}\nASSISTANT:"
 
-    # Tokenize with image token handling
     image_token_id = tokenizer.convert_tokens_to_ids(DEFAULT_IMAGE_TOKEN)
 
     sig = inspect.signature(tokenizer_image_token)
@@ -247,7 +259,6 @@ def _extract_single_vila(
 
     attention_mask = torch.ones_like(input_ids, device=device)
 
-    # VILA custom embed: fuses image patches into the token sequence
     inputs_embeds, _, attention_mask = model._embed(
         input_ids=input_ids,
         media=media,
@@ -256,11 +267,9 @@ def _extract_single_vila(
         attention_mask=attention_mask,
     )
 
-    # Ensure embeds match the LLM's expected dtype
     llm_dtype = next(model.llm.model.parameters()).dtype
     inputs_embeds = inputs_embeds.to(dtype=llm_dtype)
 
-    # Forward through the inner LLM (not the outer wrapper)
     out = model.llm.model(
         inputs_embeds=inputs_embeds,
         attention_mask=attention_mask,
@@ -274,7 +283,7 @@ def _extract_single_vila(
 
 
 # ============================================================
-# Core extraction (single sample) — dispatches by model_tag
+# Core extraction (single sample)
 # ============================================================
 
 @torch.no_grad()
@@ -287,13 +296,12 @@ def extract_single(
 ) -> np.ndarray:
     """Extract last-token hidden state from all layers.
 
-    Returns: np.ndarray of shape (n_layers, hidden_dim)
+    Returns:
+        np.ndarray of shape (n_layers, hidden_dim)
     """
-    # VILA has a completely different forward path
     if model_tag == "vila":
         return _extract_single_vila(model, processor, image, prompt)
 
-    # Standard HuggingFace models
     try:
         target_device = model.get_input_embeddings().weight.device
     except Exception:
@@ -315,10 +323,10 @@ def extract_single(
 
 
 # ============================================================
-# Dataset-level extraction
+# Dataset-level extraction for metadata-based datasets
 # ============================================================
 
-def extract_dataset(
+def extract_metadata_dataset(
     metadata_path: str,
     images_dir: str,
     output_path: str,
@@ -326,31 +334,32 @@ def extract_dataset(
     model_id: Optional[str] = None,
     task: str = "spatial",
     limit: Optional[int] = None,
+    random_prompt: bool = False,
 ) -> np.ndarray:
-    """Extract representations for an entire synthetic dataset.
+    """Extract representations for a metadata-based dataset.
 
     Args:
-        metadata_path: Path to metadata.json from generate_dataset.py
+        metadata_path: Path to metadata.json
         images_dir: Path to the images/ directory
         output_path: Where to save the .npz file
-        model_tag: Key in MODEL_REGISTRY ("qwen2", "llava15", ...)
+        model_tag: Key in MODEL_REGISTRY ("qwen2", "llava15", "vila")
         model_id: HuggingFace model ID (defaults to registry default)
-        task: "spatial" or "color" (determines prompt template & label key)
+        task: "spatial", "color", or "shape"
         limit: Max samples to process (None = all)
+        random_prompt: If True, use a generic control prompt instead of
+            task-specific prompt content.
 
     Saves .npz with:
         representations: (n_samples, n_layers, hidden_dim)
         labels: (n_samples,)
         image_ids: (n_samples,)
     """
-    # Load metadata
     with open(metadata_path) as f:
         metadata = json.load(f)
 
     if limit is not None:
         metadata = metadata[:limit]
 
-    # Load model
     registry_entry = MODEL_REGISTRY[model_tag]
     if model_id is None:
         model_id = registry_entry["default_id"]
@@ -358,7 +367,6 @@ def extract_dataset(
     print(f"Loading model: {model_id}")
     model, processor = registry_entry["loader"](model_id)
 
-    # Extract
     all_reprs = []
     all_labels = []
     all_ids = []
@@ -367,7 +375,7 @@ def extract_dataset(
     for i, sample in enumerate(metadata):
         image_path = Path(images_dir) / sample["image_filename"]
         image = Image.open(image_path).convert("RGB")
-        prompt = build_prompt(sample, task)
+        prompt = get_random_prompt(task) if random_prompt else build_prompt(sample, task)
         label = get_label(sample, task)
 
         try:
@@ -395,5 +403,14 @@ def extract_dataset(
     np.savez(output_path, representations=representations, labels=labels, image_ids=image_ids)
 
     print(f"\nSaved: {representations.shape} → {output_path}")
-    print(f"  {len(all_labels)} samples, {representations.shape[1]} layers, {representations.shape[2]} hidden dim")
+    print(
+        f"  {len(all_labels)} samples, "
+        f"{representations.shape[1]} layers, "
+        f"{representations.shape[2]} hidden dim"
+    )
     return representations
+
+
+def extract_dataset(*args, **kwargs) -> np.ndarray:
+    """Backward-compatible alias for metadata-based extraction."""
+    return extract_metadata_dataset(*args, **kwargs)

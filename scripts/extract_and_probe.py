@@ -1,18 +1,20 @@
+#scripts/extract_and_probe.py
+
 """Extract hidden states from a VLM and train probes.
 
 Usage:
     # Standard pipeline: extract + train
     python scripts/extract_and_probe.py \
-        --task spatial \
-        --data_dir data/raw/spatial \
-        --model_tag qwen2 \
-        --output_dir results/qwen2_spatial
+    --task spatial \
+    --data_dir data/raw/synthetic/spatial \
+    --model_tag qwen2 \
+    --output_dir results/synthetic/spatial/qwen2
 
     # Re-train probes from an existing NPZ
     python scripts/extract_and_probe.py \
         --task color \
         --model_tag qwen2 \
-        --output_dir results/vrd_color/qwen2/correct \
+        --output_dir results/vrd/color/qwen2/correct \
         --skip_extraction
 
     # Re-train probes from an explicitly specified NPZ
@@ -30,7 +32,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src.extraction.extract import extract_dataset
+from src.extraction.extract import extract_metadata_dataset
 from src.probing.probe import train_probes
 
 
@@ -136,7 +138,7 @@ def main():
         print(f"EXTRACTING: task={args.task}  model={args.model_tag}")
         print("=" * 60)
 
-        extract_dataset(
+        extract_metadata_dataset(
             metadata_path=str(data_dir / "metadata.json"),
             images_dir=str(data_dir / "images"),
             output_path=str(npz_path),

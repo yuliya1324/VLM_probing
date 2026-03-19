@@ -142,7 +142,7 @@ def _make_prompt(subject_desc: str, reference_desc: str, rng: random.Random) -> 
 
 def generate_spatial_dataset(
     n_samples: int = 3000,
-    output_dir: str = "data/raw/spatial",
+    output_dir: str = "data/raw/synthetic/spatial",
     seed: int = 42,
     prompt_template_index: Optional[int] = None,  # None = random
 ) -> list[dict]:

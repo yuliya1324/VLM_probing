@@ -1,3 +1,4 @@
+# scripts/evaluate_vrd_probe.py
 """
 Evaluate probe accuracy on VRD representations and save per-sample predictions.
 
@@ -25,154 +26,26 @@ from tqdm import tqdm
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.probing.probe import load_probe, load_best_probe, predict_with_probe
-
-
-# ============================================================
-# Prompts
-# ============================================================
-SPATIAL_PROMPT = (
-    "Determine the spatial relationship of '{subj}' relative to '{obj}'.\n"
-    "Choose ONE label from:\n"
-    "[left of, right of, above, below]\n"
-    "Respond with ONLY the label. No explanation."
+from src.data_preprocessing.vrd import (
+    TASK_TO_CSV,
+    load_vrd_dataframe,
+    get_image_path,
+    build_prompt,
+    get_label,
+    get_sample_id,
 )
-
-COLOR_PROMPT = (
-    "What is the color of the {subj} in the image?\n"
-    "Respond with ONLY the color name. No explanation."
-)
-
-SHAPE_PROMPT = (
-    "What is the shape of the {subj} in the image?\n"
-    "Choose ONE label from:\n"
-    "[round, circular, oval, square, rectangular, triangular]\n"
-    "Respond with ONLY the label. No explanation."
-)
-
-PROMPT_TEMPLATES = {
-    "spatial": SPATIAL_PROMPT,
-    "color": COLOR_PROMPT,
-    "shape": SHAPE_PROMPT,
-}
-
 
 # ============================================================
 # Paths
 # ============================================================
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DATA_DIR = PROJECT_ROOT / "data" / "vrd_csv"
 RESULTS_DIR = PROJECT_ROOT / "results"
 
-TASK_TO_CSV = {
-    "spatial": DATA_DIR / "vrd_spatial.csv",
-    "color": DATA_DIR / "vrd_color.csv",
-    "shape": DATA_DIR / "vrd_shape.csv",
-}
-
 TASK_TO_REPR = {
-    "spatial": lambda model_tag: RESULTS_DIR / "vrd_spatial" / model_tag / "representations.npz",
-    "color": lambda model_tag: RESULTS_DIR / "vrd_color" / model_tag / "representations.npz",
-    "shape": lambda model_tag: RESULTS_DIR / "vrd_shape" / model_tag / "representations.npz",
+    "spatial": lambda model_tag: RESULTS_DIR / "vrd" / "spatial" / model_tag / "representations.npz",
+    "color": lambda model_tag: RESULTS_DIR / "vrd" / "color" / model_tag / "representations.npz",
+    "shape": lambda model_tag: RESULTS_DIR / "vrd" / "shape" / model_tag / "representations.npz",
 }
-
-
-# ============================================================
-# Helpers
-# ============================================================
-def get_image_path(row):
-    if "image_path" in row.index:
-        return Path(row["image_path"])
-    if "img_path" in row.index:
-        return Path(row["img_path"])
-    raise ValueError("CSV must contain either 'image_path' or 'img_path'")
-
-
-def build_prompt(row, task: str) -> str:
-    template = PROMPT_TEMPLATES[task]
-
-    if task == "spatial":
-        return template.format(subj=str(row["subj"]), obj=str(row["obj"]))
-    elif task == "color":
-        return template.format(subj=str(row["obj"]))
-    elif task == "shape":
-        return template.format(subj=str(row["obj"]))
-    else:
-        raise ValueError(f"Unsupported task: {task}")
-
-
-def get_label(row, task: str):
-    if task == "spatial":
-        return row["relationship"]
-    elif task == "color":
-        return row["color"]
-    elif task == "shape":
-        return row["shape"]
-    else:
-        raise ValueError(f"Unsupported task: {task}")
-
-
-def get_sample_id(row, task: str) -> str:
-    image_path = str(get_image_path(row))
-
-    if task == "spatial":
-        return f"{image_path}||{row['subj']}||{row['obj']}||{row['relationship']}"
-    elif task == "color":
-        return f"{image_path}||{row['obj']}||{row['color']}"
-    elif task == "shape":
-        return f"{image_path}||{row['obj']}||{row['shape']}"
-    else:
-        raise ValueError(f"Unsupported task: {task}")
-
-
-def normalize_text(x) -> str:
-    return " ".join(str(x).strip().lower().split())
-
-
-def normalize_label(label: str, task: str, allowed_classes=None) -> str:
-    """
-    Normalize GT / prediction labels for comparison.
-    Uses probe classes when possible.
-    """
-    raw = normalize_text(label)
-
-    aliases = {
-        "spatial": {
-            "left": "left of",
-            "right": "right of",
-            "on the left of": "left of",
-            "on the right of": "right of",
-            "top": "above",
-            "under": "below",
-        },
-        "color": {
-            "grey": "gray",
-        },
-        "shape": {
-            "circle": "circular",
-            "round": "circular",
-            "rectangle": "rectangular",
-            "triangle": "triangular",
-        },
-    }[task]
-
-    candidates = [raw]
-    if raw in aliases:
-        candidates.append(aliases[raw])
-
-    reverse_aliases = {v: k for k, v in aliases.items()}
-    if raw in reverse_aliases:
-        candidates.append(reverse_aliases[raw])
-
-    # unique while keeping order
-    seen = set()
-    candidates = [c for c in candidates if not (c in seen or seen.add(c))]
-
-    if allowed_classes is not None:
-        for c in candidates:
-            if c in allowed_classes:
-                return c
-
-    return candidates[0]
 
 
 def build_metadata_df(df: pd.DataFrame, task: str) -> pd.DataFrame:
@@ -182,7 +55,6 @@ def build_metadata_df(df: pd.DataFrame, task: str) -> pd.DataFrame:
     out["prompt"] = out.apply(lambda row: build_prompt(row, task), axis=1)
     out["ground_truth_raw"] = out.apply(lambda row: str(get_label(row, task)), axis=1)
     return out
-
 
 # ============================================================
 # Main
@@ -218,7 +90,7 @@ def main():
     # ----------------------------
     # Load metadata CSV
     # ----------------------------
-    df = pd.read_csv(csv_path)
+    df = load_vrd_dataframe(args.task, str(csv_path))
     df = build_metadata_df(df, args.task)
 
     if df["sample_id"].duplicated().any():
@@ -247,8 +119,8 @@ def main():
         layer_idx = args.layer
         print(f"Loaded probe: layer {layer_idx}")
 
-    allowed_classes = set(map(str, le.classes_))
-    print(f"Probe classes: {sorted(allowed_classes)}")
+    probe_classes = [str(x) for x in le.classes_]
+    print(f"Probe classes: {sorted(probe_classes)}")
 
     # ----------------------------
     # Predict
@@ -267,15 +139,14 @@ def main():
         hidden_state = representations[i, layer_idx]   # (hidden_dim,)
         result = predict_with_probe(probe, le, hidden_state)
 
-        pred_raw = str(result["prediction"])
         gt_raw = str(meta["ground_truth_raw"])
+        pred_raw = str(result["prediction"])
 
-        pred_eval = normalize_label(pred_raw, args.task, allowed_classes=allowed_classes)
-        gt_eval = normalize_label(gt_raw, args.task, allowed_classes=allowed_classes)
-
+        gt_eval = gt_raw.strip().lower()
+        pred_eval = pred_raw.strip().lower()
+        correct = pred_eval == gt_eval
         probs = result.get("probabilities", {})
         confidence = max(probs.values()) if len(probs) > 0 else None
-        correct = pred_eval == gt_eval
 
         rows.append(
             {

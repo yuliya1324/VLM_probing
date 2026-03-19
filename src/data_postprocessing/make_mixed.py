@@ -3,14 +3,14 @@
 
 Example:
     python scripts/make_mixed_npz.py \
-        --vrd results/vrd_spatial/qwen2/correct/representations.npz \
-        --synthetic results/spatial/qwen2/representations.npz \
-        --output results/vrd_spatial/qwen2/mixed/representations.npz
+        --vrd results/vrd/spatial/qwen2/correct/representations.npz \
+        --synthetic results/synthetic/spatial/qwen2/representations.npz \
+        --output results/vrd/spatial/qwen2/mixed/representations.npz
 
     python scripts/make_mixed_npz.py \
-        --vrd results/vrd_color/qwen2/correct/representations.npz \
-        --synthetic results/color/qwen2/representations.npz \
-        --output results/vrd_color/qwen2/mixed/representations.npz
+        --vrd results/vrd/color/qwen2/correct/representations.npz \
+        --synthetic results/synthetic/color/qwen2/representations.npz \
+        --output results/vrd/color/qwen2/mixed/representations.npz
         
 bfr merging:
 VRD
@@ -54,21 +54,6 @@ from pathlib import Path
 
 import numpy as np
 
-
-def normalize_labels(labels: np.ndarray) -> np.ndarray:
-    """Normalize label variants to a unified form."""
-    label_map = {
-        "left of": "left_of",
-        "right of": "right_of",
-        "left_of": "left_of",
-        "right_of": "right_of",
-        "above": "above",
-        "below": "below",
-    }
-    normalized = [label_map.get(str(x), str(x)) for x in labels.tolist()]
-    return np.array(normalized, dtype="<U32")
-
-
 def load_npz(path: str):
     data = np.load(path, allow_pickle=True)
 
@@ -87,7 +72,6 @@ def load_npz(path: str):
     else:
         raise ValueError(f"{path}: missing both 'sample_ids' and 'image_ids'")
 
-    labels = normalize_labels(labels)
     ids = np.array([str(x) for x in ids.tolist()], dtype="<U128")
 
     return reps, labels, ids

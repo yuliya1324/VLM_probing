@@ -1,3 +1,4 @@
+# evaluate_vrd_raw.py
 """
 Evaluate raw VLM response accuracy on VRD CSVs.
 
@@ -30,14 +31,23 @@ import traceback
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.extraction.extract import MODEL_REGISTRY, INPUT_BUILDERS
-from scripts.extract_vrd import (
+from src.data_preprocessing.vrd import (
     TASK_TO_CSV,
-    TASK_TO_RESULT_DIR,
-    build_prompt,
     get_image_path,
+    build_prompt,
     get_label,
     get_sample_id,
+    resize_for_vrd,
 )
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+RESULTS_DIR = PROJECT_ROOT / "results"
+
+TASK_TO_RESULT_DIR = {
+    "spatial": RESULTS_DIR / "vrd" / "spatial",
+    "color": RESULTS_DIR / "vrd" / "color",
+    "shape": RESULTS_DIR / "vrd" / "shape",
+}
 
 # ============================================================
 # Label normalization / parsing
@@ -361,11 +371,12 @@ def main():
 
         try:
             image_path = get_image_path(row)
-            image = Image.open(image_path).convert("RGB")
+            image = Image.open(image_path)
+            image = resize_for_vrd(image, max_size=448)
 
             prompt = build_prompt(row, args.task)
-            gt_raw = str(get_label(row, args.task))
-            gt_eval = normalize_label(gt_raw, args.task)
+            gt_raw = str(get_label(row, args.task)).strip().lower()
+            gt_eval = gt_raw
 
             raw_response = generate_single(
                 model=model,

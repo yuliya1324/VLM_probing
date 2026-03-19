@@ -1,29 +1,15 @@
-#!/usr/bin/env python3
+#scripts/evaluate.py
 """Evaluate trained probes across ALL layers on a dataset and plot accuracy.
 
 Supports two data formats:
   1. Synthetic (.npz) — from our extract_and_probe.py pipeline
-  2. Collaborator's .pt files — from extract_qwen2.py / extract_spatialRGBT.py
 
 Usage:
     # Evaluate using .npz (synthetic dataset)
     python scripts/evaluate.py \
-        --probes_dir results/qwen2_spatial/probes \
-        --representations data/processed/qwen2_spatial.npz \
-        --output results/qwen2_spatial/eval_all_layers.png
-
-    # Evaluate using .pt files (collaborator's VRD format)
-    python scripts/evaluate.py \
-        --probes_dir results/qwen2_vrd/probes \
-        --pt_dir features/Qwen2-VL \
-        --output results/qwen2_vrd/eval_all_layers.png
-
-    # Compare multiple runs
-    python scripts/evaluate.py \
-        --probes_dir results/qwen2_spatial/probes results/vila_spatial/probes \
-        --representations results/qwen2_spatial/representations.npz results/vila_spatial/representations.npz \
-        --labels "Qwen2-VL" "SpatialRGPT-VILA" \
-        --output results/comparison.png
+        --probes_dir results/synthetic/spatial/qwen2/probes \
+        --representations results/synthetic/spatial/qwen2/representations.npz  \
+        --output results/synthetic/spatial/qwen2/eval_all_layers.png
 """
 
 import argparse
@@ -36,23 +22,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
-from src.probing.probe import load_probe
-
-# ============================================================
-# Helper
-# ============================================================
-
-def normalize_label(label: str) -> str | None:
-    label = label.strip().lower()
-    mapping = {
-        "left of": "left_of",
-        "right of": "right_of",
-        "above": "above",
-        "below": "below",
-    }
-    return mapping.get(label, None)
-
 
 # ============================================================
 # Data loading
@@ -87,111 +56,6 @@ def load_from_npz(npz_path: str, split: str = "val", train_ratio: float = 0.8, s
         idx = indices[:split_point]
 
     return representations[idx], labels[idx], image_ids[idx]
-
-
-def load_from_pt_dir(pt_dir: str):
-    """Load representations and labels from a directory of .pt files.
-
-    Each .pt file has:
-        {"layers": {...}, "meta": {"rel": ..., ...}}
-    """
-    from pathlib import Path
-    import numpy as np
-    import torch
-
-    pt_dir = Path(pt_dir)
-    pt_files = sorted(pt_dir.rglob("*.pt"))
-
-    if not pt_files:
-        raise FileNotFoundError(f"No .pt files found in {pt_dir}")
-
-    all_reprs = []
-    all_labels = []
-    all_ids = []
-
-    expected_shape = None
-    skipped = []
-
-    def sort_key(k):
-        if isinstance(k, int):
-            return k
-        if isinstance(k, str) and k.isdigit():
-            return int(k)
-        if isinstance(k, str) and k.startswith("layer_"):
-            return int(k.split("_")[-1])
-        return str(k)
-
-    for pt_path in pt_files:
-        data = torch.load(pt_path, map_location="cpu", weights_only=False)
-        layers = data["layers"]
-        meta = data["meta"]
-
-        label = meta.get("rel") or meta.get("relationship")
-        if label is None:
-            skipped.append((pt_path.name, "missing label"))
-            continue
-
-        layer_keys = sorted(layers.keys(), key=sort_key)
-
-        layer_tensors = []
-        bad_sample = False
-
-        for k in layer_keys:
-            t = layers[k]
-
-            if hasattr(t, "detach"):
-                t = t.detach().cpu().float().numpy()
-            else:
-                t = np.asarray(t, dtype=np.float32)
-
-            t = np.squeeze(t)
-
-            if t.ndim != 1:
-                skipped.append((pt_path.name, f"layer {k} has shape {t.shape} after squeeze"))
-                bad_sample = True
-                break
-
-            layer_tensors.append(t)
-
-        if bad_sample:
-            continue
-
-        try:
-            sample_repr = np.stack(layer_tensors, axis=0)
-        except ValueError:
-            skipped.append((pt_path.name, "could not stack layer tensors"))
-            continue
-
-        if expected_shape is None:
-            expected_shape = sample_repr.shape
-        elif sample_repr.shape != expected_shape:
-            skipped.append((pt_path.name, f"shape mismatch {sample_repr.shape} != {expected_shape}"))
-            continue
-
-        all_reprs.append(sample_repr)
-        all_labels.append(label)
-        all_ids.append(pt_path.stem)
-
-    if not all_reprs:
-        raise ValueError(f"No valid samples loaded from {pt_dir}")
-
-    representations = np.stack(all_reprs, axis=0)
-    labels = np.array(all_labels)
-    image_ids = np.array(all_ids)
-
-    print(
-        f"Loaded {len(labels)} valid samples from .pt files "
-        f"({representations.shape[1]} layers, {representations.shape[2]} dim)"
-    )
-
-    if skipped:
-        print(f"Skipped {len(skipped)} files:")
-        for name, reason in skipped[:20]:
-            print(f"  - {name}: {reason}")
-        if len(skipped) > 20:
-            print(f"  ... and {len(skipped) - 20} more")
-
-    return representations, labels, image_ids
 
 
 # ============================================================
@@ -405,9 +269,6 @@ def main():
     # Data source — pick one per run
     parser.add_argument("--representations", type=str, nargs="*", default=None,
                         help=".npz file(s) from extract_and_probe.py")
-    parser.add_argument("--pt_dir", type=str, nargs="*", default=None,
-                        help="Directory(s) of .pt files for VRD representations")
-
     parser.add_argument("--labels", type=str, nargs="*", default=None,
                         help="Legend labels for each run")
     parser.add_argument("--output", type=str, default=None,
@@ -427,8 +288,6 @@ def main():
     # Determine data sources
     if args.representations:
         data_sources = [("npz", p) for p in args.representations]
-    elif args.pt_dir:
-        data_sources = [("pt", p) for p in args.pt_dir]
     else:
         # Try to find representations.npz inside each probes_dir's parent
         data_sources = []
@@ -438,7 +297,7 @@ def main():
             if npz.exists():
                 data_sources.append(("npz", str(npz)))
             else:
-                print(f"Error: no data source for {pd}. Use --representations or --pt_dir")
+                print(f"Error: no data source for {pd}. Use --representations")
                 sys.exit(1)
 
     if len(data_sources) != n_runs:
@@ -462,8 +321,6 @@ def main():
 
         if src_type == "npz":
             representations, labels, image_ids = load_from_npz(src_path, split=args.split)
-        else:
-            representations, labels, image_ids = load_from_pt_dir(src_path)
 
         results = evaluate_all_layers(probes_dir, representations, labels)
         all_results.append(results)

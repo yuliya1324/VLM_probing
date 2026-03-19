@@ -70,7 +70,7 @@ def main():
     task = args.task or cfg.get("task", "spatial")
     n_samples = args.n_samples or cfg.get("n_samples", 3000)
     seed = args.seed or cfg.get("seed", 42)
-    output_dir = args.output_dir or cfg.get("output_dir", f"data/raw/{task}")
+    output_dir = args.output_dir or cfg.get("output_dir", f"data/raw/synthetic/{task}")
 
     print(f"Task: {task} | Samples: {n_samples} | Seed: {seed} | Output: {output_dir}")
 

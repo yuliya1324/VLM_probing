@@ -1,28 +1,68 @@
 #!/usr/bin/env python3
 """
-make metadata.json for VRD dataset
+Build VRD metadata JSON from a task-specific CSV.
 
-for synthetic data;
-{
-  "image_id": "3452448481_a156e6c86c_b",
-  "image_filename": "3452448481_a156e6c86c_b.jpg",
-  "shape_type": "sign",
-  "color_label": "red",
-  "prompt": "The color of the sign in the image is"
-}
+Usage:
+    python scripts/make_vrd_metadata.py --task color
+    python scripts/make_vrd_metadata.py --task shape
+    python scripts/make_vrd_metadata.py --task spatial
 
-the base csv format:
-image_path,obj,color
-/Data/masayo.tomita/VLM_probing/data/raw/vrd/sg_train_images/3452448481_a156e6c86c_b.jpg,sign,red
+Optional:
+    python scripts/make_vrd_metadata.py \
+        --task color \
+        --csv data/processed/vrd/csv/vrd_color.csv \
+        --out_dir data/processed/vrd/metadata
 """
-
-
 
 import argparse
 import json
 from pathlib import Path
 
 import pandas as pd
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+DEFAULT_CSVS = {
+    "color": PROJECT_ROOT / "data" / "processed" / "vrd" / "csv" / "vrd_color.csv",
+    "shape": PROJECT_ROOT / "data" / "processed" / "vrd" / "csv" / "vrd_shape.csv",
+    "spatial": PROJECT_ROOT / "data" / "processed" / "vrd" / "csv" / "vrd_spatial.csv",
+}
+
+DEFAULT_METADATA_DIR = PROJECT_ROOT / "data" / "processed" / "vrd" / "metadata"
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Build VRD task metadata from a task-specific CSV.",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+
+    parser.add_argument(
+        "--task",
+        type=str,
+        required=True,
+        choices=["color", "shape", "spatial"],
+        help="Task name.",
+    )
+    parser.add_argument(
+        "--csv",
+        type=str,
+        default=None,
+        help="Path to VRD CSV. Default: data/processed/vrd/csv/vrd_{task}.csv",
+    )
+    parser.add_argument(
+        "--out_dir",
+        type=str,
+        default=str(DEFAULT_METADATA_DIR),
+        help="Output directory. Default: data/processed/vrd/metadata",
+    )
+
+    args = parser.parse_args()
+
+    if args.csv is None:
+        args.csv = str(DEFAULT_CSVS[args.task])
+
+    return args
 
 
 def build_color_prompt(obj: str) -> str:
@@ -33,12 +73,31 @@ def build_shape_prompt(obj: str) -> str:
     return f"The shape of the {obj} in the image is"
 
 
-def build_spatial_prompt(sub: str, obj: str) -> str:
-    return f"The spatial relationship of {sub} to {obj} is"
+def build_spatial_prompt(subj: str, obj: str) -> str:
+    return f"The spatial relationship of {subj} to {obj} is"
 
 
 def normalize_text(x: str) -> str:
     return str(x).strip().lower()
+
+
+def normalize_shape_label(x: str) -> str:
+    x = normalize_text(x)
+    shape_map = {
+        "round": "circular",
+    }
+    return shape_map.get(x, x)
+
+
+def normalize_spatial_label(x: str) -> str:
+    x = normalize_text(x)
+    spatial_map = {
+        "left of": "left_of",
+        "right of": "right_of",
+        "above": "above",
+        "below": "below",
+    }
+    return spatial_map.get(x, x)
 
 
 def convert_color(df: pd.DataFrame) -> list[dict]:
@@ -74,7 +133,7 @@ def convert_shape(df: pd.DataFrame) -> list[dict]:
     for _, row in df.iterrows():
         image_path = Path(str(row["image_path"]).strip())
         obj = normalize_text(row["obj"])
-        shape = normalize_text(row["shape"])
+        shape = normalize_shape_label(row["shape"])
 
         metadata.append({
             "image_id": image_path.stem,
@@ -88,17 +147,17 @@ def convert_shape(df: pd.DataFrame) -> list[dict]:
 
 
 def convert_spatial(df: pd.DataFrame) -> list[dict]:
-    required = ["img_path", "subj", "obj", "relationship"]
+    required = ["image_path", "subj", "obj", "spatial"]
     for c in required:
         if c not in df.columns:
             raise ValueError(f"Missing required column for spatial task: {c}")
 
     metadata = []
     for _, row in df.iterrows():
-        image_path = Path(str(row["img_path"]).strip())
+        image_path = Path(str(row["image_path"]).strip())
         subj = normalize_text(row["subj"])
         obj = normalize_text(row["obj"])
-        rel = normalize_text(row["relationship"])
+        spatial = normalize_spatial_label(row["spatial"])
 
         metadata.append({
             "image_id": image_path.stem,
@@ -106,18 +165,14 @@ def convert_spatial(df: pd.DataFrame) -> list[dict]:
             "image_path": str(image_path),
             "subject_shape": subj,
             "reference_shape": obj,
-            "relation": rel,
+            "relation": spatial,
             "prompt": build_spatial_prompt(subj, obj),
         })
     return metadata
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--csv", type=str, required=True, help="Path to VRD CSV")
-    parser.add_argument("--task", type=str, required=True, choices=["color", "shape", "spatial"])
-    parser.add_argument("--out_dir", type=str, required=True, help="Output directory")
-    args = parser.parse_args()
+    args = parse_args()
 
     csv_path = Path(args.csv)
     out_dir = Path(args.out_dir)
@@ -132,7 +187,7 @@ def main():
     else:
         metadata = convert_spatial(df)
 
-    out_path = out_dir / "metadata.json"
+    out_path = out_dir / f"{args.task}_metadata.json"
     with open(out_path, "w") as f:
         json.dump(metadata, f, indent=2)
 
