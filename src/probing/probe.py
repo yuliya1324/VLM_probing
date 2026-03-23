@@ -13,6 +13,7 @@ from typing import Optional
 import joblib
 import numpy as np
 from sklearn.linear_model import LogisticRegression
+from sklearn.multiclass import OneVsRestClassifier
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import accuracy_score, classification_report
 
@@ -45,7 +46,12 @@ def train_probes(
     data = np.load(representations_path, allow_pickle=True)
     representations = data["representations"]  # (n_samples, n_layers, hidden_dim)
     labels_raw = data["labels"]                # (n_samples,)
-    image_ids = data["image_ids"]              # (n_samples,)
+    if "image_ids" in data:
+        image_ids = data["image_ids"]
+    elif "sample_ids" in data:
+        image_ids = data["sample_ids"]
+    else:
+        raise KeyError("Neither 'image_ids' nor 'sample_ids' found in representations archive")
 
     n_samples, n_layers, hidden_dim = representations.shape
     print(f"Data: {n_samples} samples, {n_layers} layers, {hidden_dim} hidden dim")
@@ -85,19 +91,26 @@ def train_probes(
         X_train = representations[train_mask, layer_idx, :]  # (n_train, hidden_dim)
         X_val = representations[val_mask, layer_idx, :]
 
-        probe = LogisticRegression(
-            C=C,
-            penalty="l2",
-            multi_class="ovr",  # one-vs-rest
-            solver="lbfgs",
-            max_iter=max_iter,
-            random_state=seed,
+        probe = OneVsRestClassifier(
+            LogisticRegression(
+                C=C,
+                penalty="l2",
+                solver="lbfgs",
+                max_iter=max_iter,
+                random_state=seed,
+            )
         )
         probe.fit(X_train, y_train)
 
         y_pred = probe.predict(X_val)
         acc = accuracy_score(y_val, y_pred)
-        report = classification_report(y_val, y_pred, target_names=class_names)
+        report = classification_report(
+            y_val,
+            y_pred,
+            labels=np.arange(len(class_names)),
+            target_names=class_names,
+            zero_division=0,
+        )
 
         results[layer_idx] = {
             "accuracy": float(acc),
