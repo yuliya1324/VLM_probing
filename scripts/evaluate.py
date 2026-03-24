@@ -304,7 +304,7 @@ def main():
     parser.add_argument("--representations", type=str, nargs="*", default=None,
                         help=".npz file(s) from extract_and_probe.py")
     parser.add_argument("--pt_dir", type=str, nargs="*", default=None,
-                        help="Directory(s) of .pt files from collaborator's extractors")
+                        help="Directory(s) of .pt files for VRD representations")
 
     parser.add_argument("--labels", type=str, nargs="*", default=None,
                         help="Legend labels for each run")
