@@ -72,13 +72,13 @@ DEFAULTS = {
         "strategy": "push",
     },
     ("qwen2", "shape"): {
-        "layers": (15, 28),
+        "layers": (20, 28),
         "alpha": 10.0,
         "when": "all",
         "strategy": "push",
     },
     ("qwen2", "spatial"): {
-        "layers": (15, 28),
+        "layers": (20, 28),
         "alpha": 10.0,
         "when": "all",
         "strategy": "push",
