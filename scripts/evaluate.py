@@ -2,17 +2,11 @@
 """Evaluate trained probes across ALL layers on a dataset and plot accuracy.
 
 Usage:
-    # Evaluate using .npz (synthetic dataset)
+    # Evaluate one run
     python scripts/evaluate_all_layers.py \
         --probes_dir results/qwen2_spatial/probes \
         --representations data/processed/qwen2_spatial.npz \
         --output results/qwen2_spatial/eval_all_layers.png
-
-    # Evaluate using .pt files (collaborator's VRD format)
-    python scripts/evaluate_all_layers.py \
-        --probes_dir results/qwen2_vrd/probes \
-        --pt_dir features/Qwen2-VL \
-        --output results/qwen2_vrd/eval_all_layers.png
 
     # Compare multiple runs
     python scripts/evaluate_all_layers.py \
