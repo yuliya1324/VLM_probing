@@ -1,13 +1,13 @@
 # VLM Spatial Probing
 
-Probing Vision-Language Models' internal representations for spatial relationship knowledge.
+Probing Vision-Language Models' internal representations for visual knowledge.
 
 *The work is done by [Iuliia Korotkova](https://github.com/yuliya1324) and [Masayo Tomita](https://github.com/MTomita143)*
 
 ## Project Structure
 
 ```
-.
+./
 ├── src/
 │   ├── dataset_generation/     # Synthetic image + label generation
 │   ├── data_preprocessing/     # VRD CSV helpers and preprocessing
@@ -36,8 +36,7 @@ Probing Vision-Language Models' internal representations for spatial relationshi
 ## Pipeline
 
 1. **Generate synthetic datasets** (`scripts/generate_dataset.py`)
-   - Spatial relations: images of geometric shapes with ground-truth relations
-   - Color identification: simpler task as a sanity check for the probing pipeline
+   - Spatial relations, color and shape identification
 
 2. **Extract hidden representations** (`src/extraction/extract.py`)
    - Feed each image + prompt into a VLM
@@ -47,11 +46,10 @@ Probing Vision-Language Models' internal representations for spatial relationshi
    - One-vs-rest logistic regression with L2 regularization
    - Trained per-layer on 80/20 train/val split
 
-# Quick Start
+4. **Steering** (`src/steering/steer.py`)
+    - Uses probes' weights to steer the VLMs' hidden representations.
 
 ## Environment Usage
-
-We use Python 3.11.
 
 ```bash
 uv venv -p 3.11 venv
@@ -70,40 +68,36 @@ python -m pip install -e ./VILA --no-deps
 git apply patches/vila_local.patch
 ```
 
-## Generate dataset
+## 1. Dataset Preparation
+
+Generate synthetic dataset:
 
 ```bash
-# Generate spatial dataset (default: 3000 samples)
-python scripts/generate_dataset.py --config configs/spatial_dataset.yaml
-
-# Generate color dataset (default: 1000 samples)
-python scripts/generate_dataset.py --config configs/color_dataset.yaml
-
-# Generate shape dataset (default: 1000 samples)
-python scripts/generate_dataset.py --task shape
+python scripts/generate_dataset.py \
+    --task {shape, color, spatial} \
+    --config configs/{task}_dataset.yaml
 ```
 
-## Download VRD Dataset
-This project uses the Visual Relationship Detection (VRD) dataset from Kaggle.
-To download it:
+Prepare VRD dataset:
+
+1. Download VRD
+This project uses the Visual Relationship Detection dataset from Kaggle.
 ```bash
 kaggle datasets download apoorvshekher/visual-relationship-detection-vrd-dataset
 ```
-Then unzip
+Then unzip it under `data/raw/vrd/`.
 
-## Create CSV from VRD Dataset
-We convert the Visual Relationship Detection (VRD) annotations into a flat CSV file used for probing Vision-Language Models.
-Run:
+2. Build VRD CSV files
+
+We flatten VRD annotations into task-specific CSV files used for extraction and evaluation.
+
 ```bash
-python src/dataset_to_csv.py
+python src/data_preprocessing/build_base_csv.py
+python src/data_preprocessing/build_task_csv.py --task {shape, color, spatial}
 ```
-Output:
-`~/data/vrd_relationships.csv`
-Notes
-- Only samples with existing images are included.
-- One image may produce multiple rows (one per relationship).
+The resulting files are stored in: `data/processed/vrd/csv/`.
 
-## Extract Hiddens and Train the Probes
+## 2. Extract Hiddens and Train the Probes
 
 ```bash
 python scripts/extract_and_probe.py \
@@ -116,15 +110,16 @@ python scripts/extract_and_probe.py \
     --skip_extraction # Skip extraction, use existing .npz (for re-running probes only)
 ```
 
-## Extract Hidden States for VRD dataset
+Extract hidden states for VRD dataset:
 
 ```bash
-python src/lasttoken/extract_{llava15, qwen2, spatialRGBT}.py
+python scripts/extract_vrd.py \
+    --task spatial \
+    --model_tag qwen2
 ```
+This writes by default to: `results/vrd/spatial/qwen2/representations.npz`. Likewise for color and shape.
 
-## Evaluate
-
-Example of evaluation with representations in `representations.npz`
+## 3. Probes Evaluation
 
 ```bash
 # Single model — auto-finds representations.npz next to probes/
@@ -142,16 +137,7 @@ python scripts/evaluate.py \
     --output results/comparison.png
 ```
 
-Example of evaluation with representations in `.pt` files
-
-```bash
-python scripts/evaluate.py \
-    --probes_dir results/qwen2_spatial/probes \
-    --pt_dir features/Qwen2-VL \
-    --output results/qwen2_spatial/eval_plot.png
-```
-
-## Steering
+## 4. Steering
 
 
 ```bash
@@ -209,3 +195,120 @@ with SteeringManager.from_probes(
 ):
     output = _generate(model, processor, "qwen2", image, prompt, 50)
 ```
+
+
+<details>
+
+<summary>Usage of other scripts</summary>
+
+--------------------------------------------------------------------------------
+Evaluate Raw VLM Accuracy on VRD
+--------------------------------------------------------------------------------
+
+This evaluates the model’s generated answer directly, without probes.
+```
+python scripts/evaluate_vrd_raw.py \
+    --task color \
+    --model_tag qwen2 \
+    --max_new_tokens 4
+```
+For spatial tasks, a larger max_new_tokens may be needed.
+```
+python scripts/evaluate_vrd_raw.py \
+    --task spatial \
+    --model_tag qwen2 \
+    --max_new_tokens 6
+```
+Default output: `results/vrd/<task>/<model_tag>/raw_response_predictions.csv`
+
+--------------------------------------------------------------------------------
+Evaluate Probe Predictions on VRD
+--------------------------------------------------------------------------------
+
+This applies a trained probe to VRD representations and saves per-sample
+predictions.
+```
+python scripts/evaluate_vrd_probe.py \
+    --task spatial \
+    --model_tag qwen2 \
+    --probes_dir results/synthetic/spatial/qwen2/probes
+```
+Evaluate a specific layer:
+```
+python scripts/evaluate_vrd_probe.py \
+    --task color \
+    --model_tag qwen2 \
+    --probes_dir results/synthetic/color/qwen2/probes \
+    --layer 24
+```
+Default output: `results/vrd/<task>/<model_tag>/probe_predictions.csv`
+
+--------------------------------------------------------------------------------
+Re-evaluate Synthetic Probes on the VRD Correct Subset
+--------------------------------------------------------------------------------
+
+After running evaluate_vrd_raw.py, you can create a correct-only VRD subset and
+evaluate synthetic probes on it.
+```
+python scripts/make_correct_subset.py \
+    --pred_csv results/vrd/color/qwen2/raw_response_predictions.csv \
+    --repr_npz results/vrd/color/qwen2/representations.npz \
+    --out_npz results/vrd/color/qwen2/correct/representations.npz
+```
+Then evaluate:
+```
+python scripts/evaluate.py \
+    --probes_dir results/synthetic/color/qwen2/probes \
+    --representations results/vrd/color/qwen2/correct/representations.npz \
+    --split all \
+    --output results/vrd/color/qwen2/correct/eval_with_synth_probes.png
+```
+--------------------------------------------------------------------------------
+Train Probes on the VRD Correct Subset
+--------------------------------------------------------------------------------
+```
+python scripts/extract_and_probe.py \
+    --task color \
+    --model_tag qwen2 \
+    --output_dir results/vrd/color/qwen2/correct \
+    --skip_extraction \
+    --representations_path results/vrd/color/qwen2/correct/representations.npz
+```
+--------------------------------------------------------------------------------
+Mixed Probes on VRD
+--------------------------------------------------------------------------------
+
+1. Evaluate a probe trained on the correct subset
+```
+python scripts/evaluate.py \
+    --probes_dir results/vrd/spatial/qwen2/correct/probes \
+    --representations results/vrd/spatial/qwen2/representations.npz \
+    --split all \
+    --output results/vrd/spatial/qwen2/correct/eval_on_full_vrd.png
+```
+2. Build a mixed .npz
+```
+python scripts/make_mixed_npz.py \
+    --vrd results/vrd/spatial/qwen2/correct/representations.npz \
+    --synthetic results/synthetic/spatial/qwen2/representations.npz \
+    --output results/vrd/spatial/qwen2/mixed/representations.npz
+```
+3. Train probes on the mixed dataset
+```
+python scripts/extract_and_probe.py \
+    --task spatial \
+    --model_tag qwen2 \
+    --output_dir results/vrd/spatial/qwen2/mixed \
+    --skip_extraction \
+    --representations_path results/vrd/spatial/qwen2/mixed/representations.npz
+```
+4. Evaluate on full VRD
+```
+python scripts/evaluate.py \
+    --probes_dir results/vrd/spatial/qwen2/mixed/probes \
+    --representations results/vrd/spatial/qwen2/representations.npz \
+    --split all \
+    --output results/vrd/spatial/qwen2/mixed/eval_on_full_vrd.png
+```
+
+</details>
