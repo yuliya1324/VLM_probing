@@ -46,7 +46,12 @@ def train_probes(
     data = np.load(representations_path, allow_pickle=True)
     representations = data["representations"]  # (n_samples, n_layers, hidden_dim)
     labels_raw = data["labels"]                # (n_samples,)
-    image_ids = data["image_ids"]              # (n_samples,)
+    if "image_ids" in data:
+        image_ids = data["image_ids"]
+    elif "sample_ids" in data:
+        image_ids = data["sample_ids"]
+    else:
+        raise KeyError("Neither 'image_ids' nor 'sample_ids' found in representations archive")
 
     n_samples, n_layers, hidden_dim = representations.shape
     print(f"Data: {n_samples} samples, {n_layers} layers, {hidden_dim} hidden dim")
@@ -99,7 +104,13 @@ def train_probes(
 
         y_pred = probe.predict(X_val)
         acc = accuracy_score(y_val, y_pred)
-        report = classification_report(y_val, y_pred, target_names=class_names)
+        report = classification_report(
+            y_val,
+            y_pred,
+            labels=np.arange(len(class_names)),
+            target_names=class_names,
+            zero_division=0,
+        )
 
         results[layer_idx] = {
             "accuracy": float(acc),

@@ -43,9 +43,13 @@ results/
 *.safetensors
 *.npz
 
-# Model outputs
-features/
-
-# external model repo (patched locally)
+# External model repo (patched locally)
 VILA/
 src/vila
+
+# Log/run scripts
+local_scripts/
+*.txt
+
+# Plot
+src/plot

@@ -3,7 +3,7 @@ task: spatial
 
 n_samples: 3000
 seed: 42
-output_dir: data/raw/spatial
+output_dir: data/raw/synthetic/spatial
 
 canvas:
   width: 448

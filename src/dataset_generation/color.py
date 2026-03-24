@@ -96,7 +96,7 @@ def _random_positions(n: int, rng: random.Random) -> list:
 
 def generate_color_dataset(
     n_samples: int = 1000,
-    output_dir: str = "data/raw/color",
+    output_dir: str = "data/raw/synthetic/color",
     seed: int = 123,
     min_shapes: int = 1,
     max_shapes: int = 3,
