@@ -52,6 +52,13 @@ def main():
                     help="Json file with metadata for train split")
     parser.add_argument("--val_split_path", type=str, default=None,
                     help="Json file with metadata for val spli")
+    parser.add_argument(
+        "--representations_path",
+        type=str,
+        default=None,
+        help="Optional path to an existing representations.npz. "
+             "If omitted, uses <output_dir>/representations.npz",
+    )
 
     # Model
     parser.add_argument("--model_tag", type=str, required=True,
@@ -77,14 +84,18 @@ def main():
 
     args = parser.parse_args()
 
-    data_dir = Path(args.data_dir)
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    npz_path = str(output_dir / "representations.npz")
+    npz_path = Path(args.representations_path) if args.representations_path else output_dir / "representations.npz"
 
     # --- Step 1: Extract ---
     if not args.skip_extraction:
+        if args.data_dir is None:
+            parser.error("--data_dir is required unless --skip_extraction is used.")
+
+        data_dir = Path(args.data_dir)
+
         print("=" * 60)
         print(f"EXTRACTING: task={args.task}  model={args.model_tag}")
         print("=" * 60)
@@ -92,7 +103,7 @@ def main():
         extract_dataset(
             metadata_path=str(data_dir / "metadata.json"),
             images_dir=str(data_dir / "images"),
-            output_path=npz_path,
+            output_path=str(npz_path),
             model_tag=args.model_tag,
             model_id=args.model_id,
             task=args.task,
@@ -111,7 +122,7 @@ def main():
     print("=" * 60)
 
     results = train_probes(
-        representations_path=npz_path,
+        representations_path=str(npz_path),
         output_dir=str(output_dir),
         train_split_path=args.train_split_path,
         val_split_path=args.val_split_path,
