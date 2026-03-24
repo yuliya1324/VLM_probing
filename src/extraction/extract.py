@@ -78,12 +78,12 @@ def build_prompt(sample: dict, task: str) -> str:
 
 def get_label(sample: dict, task: str) -> str:
     """Extract the ground-truth label from a metadata sample."""
+    if task == "color":
+        return str(sample["color_label"]).strip().lower()
+    if task == "shape":
+        return str(sample["shape_label"]).strip().lower()
     if task == "spatial":
-        return sample["relation"]
-    elif task == "color":
-        return sample["color_label"]
-    elif task == "shape":
-        return sample["shape_label"]
+        return str(sample["relation"]).strip().lower()
     else:
         raise ValueError(f"Unknown task: {task}")
 

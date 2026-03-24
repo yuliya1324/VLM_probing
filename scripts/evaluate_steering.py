@@ -37,6 +37,40 @@ from PIL import Image
 from src.extraction.extract import MODEL_REGISTRY, build_prompt, get_label
 from src.steering.steer import SteeringManager, _generate
 
+# ============================================================
+# delete warning message
+# ============================================================
+import warnings
+
+warnings.filterwarnings(
+    "ignore",
+    message=r".*do_sample.*temperature.*",
+)
+
+warnings.filterwarnings(
+    "ignore",
+    message=r".*do_sample.*top_p.*",
+)
+
+warnings.filterwarnings(
+    "ignore",
+    message=r".*do_sample.*top_k.*",
+)
+
+warnings.filterwarnings(
+    "ignore",
+    message=r".*Plan failed with a cudnnException.*",
+)
+
+
+# ============================================================
+# prompt helper
+# ============================================================
+
+def get_prompt_from_metadata(sample: dict, task: str) -> str:
+    if "prompt" in sample:
+        return sample["prompt"].strip()
+    return build_prompt(sample, task)
 
 # ============================================================
 # Response parsing
@@ -106,6 +140,7 @@ def evaluate_steering(
     alphas: list,
     when: str = "all",
     max_new_tokens: int = 50,
+    from_metadata: bool = False,
 ) -> dict:
     """Run comprehensive steering evaluation.
 
@@ -137,9 +172,17 @@ def evaluate_steering(
         }
 
         for i, sample in enumerate(metadata):
-            image_path = Path(images_dir) / sample["image_filename"]
+            if "image_path" in sample:
+                image_path = Path(sample["image_path"])
+            else:
+                image_path = Path(images_dir) / sample["image_filename"]
             image = Image.open(image_path).convert("RGB")
-            prompt = build_prompt(sample, task)
+            image = image.resize((224, 224))
+
+            if from_metadata:
+                prompt = get_prompt_from_metadata(sample, task)
+            else:
+                prompt = build_prompt(sample, task)
             gt_label = get_label(sample, task)
 
             # Normalize GT
@@ -323,6 +366,8 @@ def main():
     parser.add_argument("--max_new_tokens", type=int, default=50)
     parser.add_argument("--output", type=str, default=None, help="Save JSON results")
     parser.add_argument("--plot", type=str, default=None, help="Save plot")
+    parser.add_argument("--from_metadata", action="store_true",
+                        help="Take prompt and GT label from metadata")
     args = parser.parse_args()
 
     # Load metadata
@@ -346,6 +391,7 @@ def main():
         alphas=args.alphas,
         when=args.when,
         max_new_tokens=args.max_new_tokens,
+        from_metadata=args.from_metadata,
     )
 
     # Save
