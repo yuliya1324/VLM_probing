@@ -7,34 +7,28 @@ Probing Vision-Language Models' internal representations for spatial relationshi
 ## Project Structure
 
 ```
-vlm-spatial-probing/
-├── configs/                    # YAML configs for dataset generation & experiments
-│   ├── spatial_dataset.yaml
-│   └── color_dataset.yaml
-├── data/
-│   ├── raw/                    # Generated images
-│        └── vrd                # Dataset - Visual Relationship Detection
-│   └── splits/                 # Train/val JSON splits
+.
 ├── src/
 │   ├── dataset_generation/     # Synthetic image + label generation
-│   │   ├── spatial.py          # Spatial relationship dataset
-│   │   ├── color.py            # Color identification dataset 
-│   │   ├── shape.py            # Shape identification dataset 
-│   │   ├── renderer.py         # Shape rendering engine
-│   │   └── schema.py           # Data schemas / types
+│   ├── data_preprocessing/     # VRD CSV helpers and preprocessing
+│   ├── data_postprocessing/    # VRD postprocessing
 │   ├── extraction/             # Hidden state extraction from VLMs
-│   │   └── extract.py
-│   └── probing/                # Linear probe training & evaluation
-│       └── probe.py
+│   │   ├── extract.py
+│   │   └── io.py
+│   ├── probing/                # Linear probe training & evaluation
+│   │   └── probe.py
 │   └── steering/               # Steering code
 │       └── steer.py
 ├── scripts/                    # Entry-point scripts
-│   ├── generate_dataset.py     # Script for generating the dataset
+│   ├── generate_dataset.py     # Script for generating synthetic dataset
 │   ├── extract_and_probe.py    # Script for the whole pipeline extract & probe
-│   ├── evaluate.py             # Script for evaluation
+│   ├── evaluate.py             # Script for probing evaluation
+│   ├── evaluate_steering.py    # Script for steering evaluation
 │   └── run_steering.py         # Script for steering
-├── notebooks/                  # Exploratory notebooks
-├── results/                    # Saved probe results, plots
+├── notebooks/                  
+├── configs/                    # YAML configs for dataset generation & experiments
+│   ├── spatial_dataset.yaml
+│   └── color_dataset.yaml
 ├── requirements.txt
 └── README.md
 ```
@@ -57,23 +51,17 @@ vlm-spatial-probing/
 
 ## Environment Usage
 
-We use Python 3.11 for extraction (cluster default is 3.9).
-
-Reason:
-Some models require Python 3.11 + specific CUDA/bitsandbytes versions.
+We use Python 3.11.
 
 ```bash
-uv venv -p 3.11 venv-extract
-source venv-extract/bin/activate
+uv venv -p 3.11 venv
+source venv/bin/activate
 python -m ensurepip
 python -m pip install --upgrade pip
-python -m pip install -r requirements-extract.txt --no-deps
+python -m pip install -r requirements.txt --no-deps
 python -m pip install -e "git+https://github.com/NVlabs/VILA.git@b760c34b9487fd736b4075f5111fbef3d80a37e9#egg=vila" --no-deps
 ```
-Run:
-```bash
-./scripts/run_extract.sh
-```
+
 Model Setup (SpacialRGBT)
 
 ```bash
