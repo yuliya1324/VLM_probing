@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 """Evaluate trained probes across ALL layers on a dataset and plot accuracy.
 
-Supports two data formats:
-  1. Synthetic (.npz) — from our extract_and_probe.py pipeline
-  2. Collaborator's .pt files — from extract_qwen2.py / extract_spatialRGBT.py
-
 Usage:
     # Evaluate using .npz (synthetic dataset)
     python scripts/evaluate_all_layers.py \
@@ -56,7 +52,18 @@ def load_from_npz(npz_path: str, probes_dir: str = None, split: str = "val",
     data = np.load(npz_path, allow_pickle=True)
     representations = data["representations"]  # (n_samples, n_layers, hidden_dim)
     labels = data["labels"]
-    image_ids = data["image_ids"]
+
+    if "image_ids" in data.files:
+        image_ids = data["image_ids"]
+    elif "sample_ids" in data.files:
+        image_ids = data["sample_ids"]
+    elif "ids" in data.files:
+        image_ids = np.arange(len(labels))
+    else:
+        image_ids = np.arange(len(labels))
+
+    if split == "all":
+        return representations, labels, image_ids
 
     # 1. Use split JSON if provided
     if split_json:
@@ -91,49 +98,6 @@ def load_from_npz(npz_path: str, probes_dir: str = None, split: str = "val",
     return representations[idx], labels[idx], image_ids[idx]
 
 
-def load_from_pt_dir(pt_dir: str):
-    """Load representations and labels from a directory of .pt files.
-
-    Each .pt file has:
-        {"layers": {0: tensor, 1: tensor, ...}, "meta": {"rel": ..., ...}}
-    """
-    pt_dir = Path(pt_dir)
-    pt_files = sorted(pt_dir.glob("*.pt"))
-
-    if not pt_files:
-        raise FileNotFoundError(f"No .pt files found in {pt_dir}")
-
-    import torch
-
-    all_reprs = []
-    all_labels = []
-    all_ids = []
-
-    for pt_path in pt_files:
-        data = torch.load(pt_path, map_location="cpu", weights_only=False)
-        layers = data["layers"]
-        meta = data["meta"]
-
-        label = meta.get("rel") or meta.get("relationship")
-        if label is None:
-            continue
-
-        n_layers = len(layers)
-        layer_tensors = [layers[l].float().numpy() for l in range(n_layers)]
-        sample_repr = np.stack(layer_tensors, axis=0)
-
-        all_reprs.append(sample_repr)
-        all_labels.append(label)
-        all_ids.append(pt_path.stem)
-
-    representations = np.stack(all_reprs, axis=0)
-    labels = np.array(all_labels)
-    image_ids = np.array(all_ids)
-
-    print(f"Loaded {len(labels)} samples from .pt files ({n_layers} layers, {representations.shape[2]} dim)")
-    return representations, labels, image_ids
-
-
 # ============================================================
 # Evaluation
 # ============================================================
@@ -166,6 +130,48 @@ def evaluate_all_layers(
     # Encode labels using the same encoder
     import joblib
     le = joblib.load(probes_dir / "label_encoder.joblib")
+
+    """
+    normalized_labels = np.array([normalize_label(x) for x in labels])
+    valid_mask = np.array([x is not None for x in normalized_labels])
+
+    representations = representations[valid_mask]
+    labels = normalized_labels[valid_mask]
+
+    print(f"Kept {len(labels)} samples after filtering to supported classes: {list(le.classes_)}")
+
+    y_true = le.transform(labels)    
+    """
+    supported = set(le.classes_)
+
+    def normalize_for_probe(label: str):
+        label = str(label).strip().lower()
+
+        # spatial aliases
+        alias_map = {
+            "left of": "left_of",
+            "right of": "right_of",
+        }
+        label = alias_map.get(label, label)
+
+        # keep only labels supported by this probe
+        if label in supported:
+            return label
+        return None
+
+    normalized_labels = np.array([normalize_for_probe(x) for x in labels], dtype=object)
+    valid_mask = np.array([x is not None for x in normalized_labels])
+
+    representations = representations[valid_mask]
+    labels = normalized_labels[valid_mask]
+
+    print(f"Kept {len(labels)} samples after filtering to supported classes: {list(le.classes_)}")
+
+    if len(labels) == 0:
+        raise ValueError(
+            f"No samples remain after filtering to supported classes {list(le.classes_)}"
+        )
+
     y_true = le.transform(labels)
 
     layer_accuracies = []
@@ -303,8 +309,6 @@ def main():
     # Data source — pick one per run
     parser.add_argument("--representations", type=str, nargs="*", default=None,
                         help=".npz file(s) from extract_and_probe.py")
-    parser.add_argument("--pt_dir", type=str, nargs="*", default=None,
-                        help="Directory(s) of .pt files for VRD representations")
 
     parser.add_argument("--labels", type=str, nargs="*", default=None,
                         help="Legend labels for each run")
@@ -313,7 +317,7 @@ def main():
     parser.add_argument("--title", type=str, default="Probe Accuracy Across Layers")
     parser.add_argument("--per_class", action="store_true",
                         help="Show per-class accuracy breakdown (single run only)")
-    parser.add_argument("--split", type=str, default="val", choices=["train", "val"],
+    parser.add_argument("--split", type=str, default="val", choices=["train", "val", "all"],
                         help="Which split to evaluate on for .npz data")
     parser.add_argument("--split_json", type=str, default=None,
                         help="Path to split JSON (e.g. data/splits/spatial/val.json). "
@@ -328,8 +332,6 @@ def main():
     # Determine data sources
     if args.representations:
         data_sources = [("npz", p) for p in args.representations]
-    elif args.pt_dir:
-        data_sources = [("pt", p) for p in args.pt_dir]
     else:
         # Try to find representations.npz inside each probes_dir's parent
         data_sources = []
@@ -339,7 +341,7 @@ def main():
             if npz.exists():
                 data_sources.append(("npz", str(npz)))
             else:
-                print(f"Error: no data source for {pd}. Use --representations or --pt_dir")
+                print(f"Error: no data source for {pd}. Use --representations")
                 sys.exit(1)
 
     if len(data_sources) != n_runs:
@@ -361,13 +363,10 @@ def main():
         print(f"  Data:   {src_path} ({src_type})")
         print(f"{'='*60}")
 
-        if src_type == "npz":
-            representations, labels, image_ids = load_from_npz(
-                src_path, probes_dir=probes_dir, split=args.split,
-                split_json=args.split_json,
-            )
-        else:
-            representations, labels, image_ids = load_from_pt_dir(src_path)
+        representations, labels, image_ids = load_from_npz(
+            src_path, probes_dir=probes_dir, split=args.split,
+            split_json=args.split_json,
+        )
 
         results = evaluate_all_layers(probes_dir, representations, labels)
         all_results.append(results)
