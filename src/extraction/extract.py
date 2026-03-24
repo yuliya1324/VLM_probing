@@ -327,15 +327,15 @@ def extract_dataset(
     task: str = "spatial",
     limit: Optional[int] = None,
 ) -> np.ndarray:
-    """Extract representations for an entire synthetic dataset.
+    """Extract representations for a metadata-based dataset.
 
     Args:
-        metadata_path: Path to metadata.json from generate_dataset.py
+        metadata_path: Path to metadata.json
         images_dir: Path to the images/ directory
         output_path: Where to save the .npz file
-        model_tag: Key in MODEL_REGISTRY ("qwen2", "llava15", ...)
+        model_tag: Key in MODEL_REGISTRY ("qwen2", "llava15", "vila")
         model_id: HuggingFace model ID (defaults to registry default)
-        task: "spatial" or "color" (determines prompt template & label key)
+        task: "spatial", "color", or "shape"
         limit: Max samples to process (None = all)
 
     Saves .npz with:
