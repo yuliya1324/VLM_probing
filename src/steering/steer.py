@@ -52,6 +52,21 @@ import numpy as np
 import torch
 from PIL import Image
 
+# ============================================================
+# Unify Label
+# ============================================================
+def _canonicalize_label(label: str) -> str:
+    label = str(label).strip().lower()
+    mapping = {
+        "left of": "left_of",
+        "right of": "right_of",
+        "left_of": "left_of",
+        "right_of": "right_of",
+        "above": "above",
+        "below": "below",
+    }
+    return mapping.get(label, label)
+
 
 # ============================================================
 # Steering hook
@@ -140,7 +155,10 @@ def get_steering_vector(
     probe = joblib.load(probes_dir / f"probe_layer_{layer:03d}.joblib")
     le = joblib.load(probes_dir / "label_encoder.joblib")
 
-    classes = list(le.classes_)
+    raw_classes = list(le.classes_)
+    classes = [_canonicalize_label(c) for c in raw_classes]
+    
+    target_class = _canonicalize_label(target_class)
     target_idx = classes.index(target_class)
 
     if hasattr(probe, "estimators_"):
@@ -151,6 +169,7 @@ def get_steering_vector(
     target_vec = torch.tensor(target_weights, dtype=torch.float32)
 
     if strategy == "contrast" and source_class is not None:
+        source_class = _canonicalize_label(source_class)
         source_idx = classes.index(source_class)
         if hasattr(probe, "estimators_"):
             source_weights = probe.estimators_[source_idx].coef_[0]
