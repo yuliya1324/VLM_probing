@@ -27,8 +27,6 @@ import matplotlib.pyplot as plt
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src.probing.probe import load_probe
-
 
 # ============================================================
 # Data loading

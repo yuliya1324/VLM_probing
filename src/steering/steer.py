@@ -43,12 +43,10 @@ Usage:
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Optional, List, Union
 
 import joblib
-import numpy as np
 import torch
 from PIL import Image
 
