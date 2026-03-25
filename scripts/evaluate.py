@@ -1,15 +1,19 @@
-#scripts/evaluate.py
+#!/usr/bin/env python3
 """Evaluate trained probes across ALL layers on a dataset and plot accuracy.
 
-Supports two data formats:
-  1. Synthetic (.npz) — from our extract_and_probe.py pipeline
-
 Usage:
-    # Evaluate using .npz (synthetic dataset)
-    python scripts/evaluate.py \
-        --probes_dir results/synthetic/spatial/qwen2/probes \
-        --representations results/synthetic/spatial/qwen2/representations.npz  \
-        --output results/synthetic/spatial/qwen2/eval_all_layers.png
+    # Evaluate one run
+    python scripts/evaluate_all_layers.py \
+        --probes_dir results/qwen2_spatial/probes \
+        --representations data/processed/qwen2_spatial.npz \
+        --output results/qwen2_spatial/eval_all_layers.png
+
+    # Compare multiple runs
+    python scripts/evaluate_all_layers.py \
+        --probes_dir results/qwen2_spatial/probes results/vila_spatial/probes \
+        --representations results/qwen2_spatial/representations.npz results/vila_spatial/representations.npz \
+        --labels "Qwen2-VL" "SpatialRGPT-VILA" \
+        --output results/comparison.png
 """
 
 import argparse
@@ -23,14 +27,22 @@ import matplotlib.pyplot as plt
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+
 # ============================================================
 # Data loading
 # ============================================================
 
-def load_from_npz(npz_path: str, split: str = "val", train_ratio: float = 0.8, seed: int = 42):
-    """Load representations and labels from .npz."""
+def load_from_npz(npz_path: str, probes_dir: str = None, split: str = "val",
+                  split_json: str = None, train_ratio: float = 0.8, seed: int = 42):
+    """Load representations and labels from .npz, return the requested split.
+
+    Split source priority:
+      1. --split_json (e.g. data/splits/spatial/val.json) — most explicit
+      2. Saved indices in probes_dir (val_indices.npy) — from training
+      3. Regenerate from seed + train_ratio — fallback
+    """
     data = np.load(npz_path, allow_pickle=True)
-    representations = data["representations"]
+    representations = data["representations"]  # (n_samples, n_layers, hidden_dim)
     labels = data["labels"]
 
     if "image_ids" in data.files:
@@ -45,6 +57,26 @@ def load_from_npz(npz_path: str, split: str = "val", train_ratio: float = 0.8, s
     if split == "all":
         return representations, labels, image_ids
 
+    # 1. Use split JSON if provided
+    if split_json:
+        import json as _json
+        with open(split_json) as f:
+            split_samples = _json.load(f)
+        split_ids = set(s["image_id"] for s in split_samples)
+        mask = np.array([iid in split_ids for iid in image_ids])
+        print(f"  Using split JSON: {len(split_ids)} ids from {split_json}, matched {mask.sum()}")
+        return representations[mask], labels[mask], image_ids[mask]
+
+    # 2. Try saved split indices from training
+    if probes_dir:
+        split_file = Path(probes_dir) / f"{split}_indices.npy"
+        if split_file.exists():
+            idx = np.load(split_file)
+            print(f"  Using saved {split} indices ({len(idx)} samples) from {split_file}")
+            return representations[idx], labels[idx], image_ids[idx]
+
+    # 3. Fallback: regenerate split
+    print(f"  Warning: no saved split found, regenerating with seed={seed}")
     n = len(labels)
     rng = np.random.RandomState(seed)
     indices = rng.permutation(n)
@@ -90,6 +122,7 @@ def evaluate_all_layers(
     # Encode labels using the same encoder
     import joblib
     le = joblib.load(probes_dir / "label_encoder.joblib")
+
     """
     normalized_labels = np.array([normalize_label(x) for x in labels])
     valid_mask = np.array([x is not None for x in normalized_labels])
@@ -132,7 +165,6 @@ def evaluate_all_layers(
         )
 
     y_true = le.transform(labels)
-    
 
     layer_accuracies = []
     per_class_accuracies = []
@@ -269,6 +301,7 @@ def main():
     # Data source — pick one per run
     parser.add_argument("--representations", type=str, nargs="*", default=None,
                         help=".npz file(s) from extract_and_probe.py")
+
     parser.add_argument("--labels", type=str, nargs="*", default=None,
                         help="Legend labels for each run")
     parser.add_argument("--output", type=str, default=None,
@@ -278,6 +311,9 @@ def main():
                         help="Show per-class accuracy breakdown (single run only)")
     parser.add_argument("--split", type=str, default="val", choices=["train", "val", "all"],
                         help="Which split to evaluate on for .npz data")
+    parser.add_argument("--split_json", type=str, default=None,
+                        help="Path to split JSON (e.g. data/splits/spatial/val.json). "
+                             "Overrides --split and saved indices.")
     parser.add_argument("--save_json", action="store_true",
                         help="Save detailed results as JSON alongside the plot")
 
@@ -319,8 +355,10 @@ def main():
         print(f"  Data:   {src_path} ({src_type})")
         print(f"{'='*60}")
 
-        if src_type == "npz":
-            representations, labels, image_ids = load_from_npz(src_path, split=args.split)
+        representations, labels, image_ids = load_from_npz(
+            src_path, probes_dir=probes_dir, split=args.split,
+            split_json=args.split_json,
+        )
 
         results = evaluate_all_layers(probes_dir, representations, labels)
         all_results.append(results)

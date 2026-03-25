@@ -76,7 +76,7 @@ def _pick_background(rng: random.Random, shape_color: str) -> tuple:
 
 def generate_shape_dataset(
     n_samples: int = 1000,
-    output_dir: str = "data/raw/synthetic/shape",
+    output_dir: str = "data/raw/shape",
     seed: int = 456,
 ) -> list:
     """Generate shape-identification images and metadata."""

@@ -34,8 +34,7 @@ results/
 !results/**/manifest.json
 
 # Jupyter
-.ipynb_checkpoints/
-notebooks/*.ipynb
+.ipynb_checkpoints/.gitignore
 
 # Model weights / large files
 *.bin

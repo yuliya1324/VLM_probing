@@ -43,12 +43,10 @@ Usage:
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Optional, List, Union
 
 import joblib
-import numpy as np
 import torch
 from PIL import Image
 
@@ -156,10 +154,10 @@ def get_steering_vector(
     le = joblib.load(probes_dir / "label_encoder.joblib")
 
     raw_classes = list(le.classes_)
-    canonical_classes = [_canonicalize_label(c) for c in raw_classes]
+    classes = [_canonicalize_label(c) for c in raw_classes]
     
     target_class = _canonicalize_label(target_class)
-    target_idx = canonical_classes.index(target_class)
+    target_idx = classes.index(target_class)
 
     if hasattr(probe, "estimators_"):
         target_weights = probe.estimators_[target_idx].coef_[0]
@@ -170,8 +168,7 @@ def get_steering_vector(
 
     if strategy == "contrast" and source_class is not None:
         source_class = _canonicalize_label(source_class)
-        source_idx = canonical_classes.index(source_class)
-        
+        source_idx = classes.index(source_class)
         if hasattr(probe, "estimators_"):
             source_weights = probe.estimators_[source_idx].coef_[0]
         else:

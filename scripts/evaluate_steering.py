@@ -1,4 +1,4 @@
-# scripts/evaluate_steering.py
+#!/usr/bin/env python3
 """Evaluate steering quality with quantitative metrics.
 
 Computes for each alpha value:
@@ -10,13 +10,13 @@ Computes for each alpha value:
 
 Usage:
     python scripts/evaluate_steering.py \
-        --probes_dir results/synthetic/spatial/qwen2/probes \
-        --data_dir data/raw/synthetic/spatial \
+        --probes_dir results/qwen2_spatial/probes \
+        --data_dir data/raw/spatial \
         --task spatial \
         --model_tag qwen2 \
         --layers 20 \
         --alphas 0 1 2 5 10 20 50 \
-        --output results/vrd/spatial/qwen2/steering_eval.json \
+        --output results/qwen2_spatial/steering_eval.json \
         --limit 100
 """
 
@@ -27,39 +27,13 @@ import sys
 from pathlib import Path
 from collections import defaultdict
 
-from tqdm import tqdm
-
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import torch
 from PIL import Image
 
-from src.extraction.extract import MODEL_REGISTRY
+from src.extraction.extract import MODEL_REGISTRY, build_prompt, get_label
 from src.steering.steer import SteeringManager, _generate
-
-
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DATA_ROOT = PROJECT_ROOT / "data" / "raw" / "synthetic"
-
-TASK_TO_DATA_DIR = {
-    "spatial": DATA_ROOT / "spatial",
-    "color": DATA_ROOT / "color",
-    "shape": DATA_ROOT / "shape",
-}
-
-RESULTS_DIR = PROJECT_ROOT / "results"
-
-TASK_TO_DEFAULT_OUTPUT = {
-    "spatial": lambda model_tag: RESULTS_DIR / "synthetic" / "spatial" / model_tag / "steering_eval.json",
-    "color": lambda model_tag: RESULTS_DIR / "synthetic" / "color" / model_tag / "steering_eval.json",
-    "shape": lambda model_tag: RESULTS_DIR / "synthetic" / "shape" / model_tag / "steering_eval.json",
-}
-
-TASK_TO_DEFAULT_PLOT = {
-    "spatial": lambda model_tag: RESULTS_DIR / "synthetic" / "spatial" / model_tag / "steering_eval.png",
-    "color": lambda model_tag: RESULTS_DIR / "synthetic" / "color" / model_tag / "steering_eval.png",
-    "shape": lambda model_tag: RESULTS_DIR / "synthetic" / "shape" / model_tag / "steering_eval.png",
-}
 
 # ============================================================
 # delete warning message
@@ -85,6 +59,16 @@ warnings.filterwarnings(
     "ignore",
     message=r".*Plan failed with a cudnnException.*",
 )
+
+
+# ============================================================
+# prompt helper
+# ============================================================
+
+def get_prompt_from_metadata(sample: dict, task: str) -> str:
+    if "prompt" in sample:
+        return sample["prompt"].strip()
+    return build_prompt(sample, task)
 
 # ============================================================
 # Response parsing
@@ -140,29 +124,7 @@ def parse_response(response: str, task: str) -> dict:
         "parsed_label": matched_label,
         "is_gibberish": is_gibberish,
     }
-    
 
-# ============================================================
-# prompt helper
-# ============================================================
-
-def get_label_from_metadata(sample: dict, task: str) -> str:
-    if task == "color":
-        return str(sample["color_label"]).strip().lower()
-    if task == "shape":
-        return str(sample["shape_label"]).strip().lower()
-    if task == "spatial":
-        return str(sample["relation"]).strip().lower()
-
-    raise ValueError(f"Unknown task: {task}")
-
-
-def get_prompt_from_metadata(sample: dict, task: str) -> str:
-    if "prompt" in sample:
-        return sample["prompt"].strip()
-
-    from src.extraction.extract import build_prompt
-    return build_prompt(sample, task)
 
 # ============================================================
 # Evaluation
@@ -176,6 +138,7 @@ def evaluate_steering(
     alphas: list,
     when: str = "all",
     max_new_tokens: int = 50,
+    from_metadata: bool = False,
 ) -> dict:
     """Run comprehensive steering evaluation.
 
@@ -183,8 +146,7 @@ def evaluate_steering(
       - Steer toward GT: does accuracy improve?
       - Steer toward a random wrong class: does accuracy drop?
     """
-    #classes = list(set(get_label(s, task) for s in metadata))
-    classes = list(set(get_label_from_metadata(s, task) for s in metadata))
+    classes = list(set(get_label(s, task) for s in metadata))
     n = len(metadata)
 
     # Results per alpha
@@ -215,8 +177,11 @@ def evaluate_steering(
             image = Image.open(image_path).convert("RGB")
             image = image.resize((224, 224))
 
-            prompt = get_prompt_from_metadata(sample, task)
-            gt_label = get_label_from_metadata(sample, task)
+            if from_metadata:
+                prompt = get_prompt_from_metadata(sample, task)
+            else:
+                prompt = build_prompt(sample, task)
+            gt_label = get_label(sample, task)
 
             # Normalize GT
             gt_norm = LABEL_NORMALIZE.get(gt_label, gt_label)
@@ -388,7 +353,7 @@ def plot_steering_eval(results: dict, output_path: str = None):
 def main():
     parser = argparse.ArgumentParser(description="Evaluate steering quality")
     parser.add_argument("--probes_dir", type=str, required=True)
-    parser.add_argument("--data_dir", type=str, default=None)
+    parser.add_argument("--data_dir", type=str, required=True)
     parser.add_argument("--task", type=str, required=True, choices=["spatial", "color", "shape"])
     parser.add_argument("--model_tag", type=str, required=True)
     parser.add_argument("--model_id", type=str, default=None)
@@ -399,12 +364,12 @@ def main():
     parser.add_argument("--max_new_tokens", type=int, default=50)
     parser.add_argument("--output", type=str, default=None, help="Save JSON results")
     parser.add_argument("--plot", type=str, default=None, help="Save plot")
+    parser.add_argument("--from_metadata", action="store_true",
+                        help="Take prompt and GT label from metadata")
     args = parser.parse_args()
 
     # Load metadata
-    data_dir = Path(args.data_dir) if args.data_dir else TASK_TO_DATA_DIR[args.task]
-    output_path = Path(args.output) if args.output else TASK_TO_DEFAULT_OUTPUT[args.task](args.model_tag)
-    plot_path = Path(args.plot) if args.plot else TASK_TO_DEFAULT_PLOT[args.task](args.model_tag)
+    data_dir = Path(args.data_dir)
     with open(data_dir / "metadata.json") as f:
         metadata = json.load(f)
     if args.limit:
@@ -424,16 +389,19 @@ def main():
         alphas=args.alphas,
         when=args.when,
         max_new_tokens=args.max_new_tokens,
+        from_metadata=args.from_metadata,
     )
 
-    # Save JSON
-    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-    with open(output_path, "w") as f:
-        json.dump(results, f, indent=2, default=str)
-    print(f"\nSaved results → {output_path}")
+    # Save
+    if args.output:
+        Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+        with open(args.output, "w") as f:
+            json.dump(results, f, indent=2, default=str)
+        print(f"\nSaved results → {args.output}")
 
-    # Save plot
-    plot_steering_eval(results, str(plot_path))
+    # Plot
+    if args.plot:
+        plot_steering_eval(results, args.plot)
 
 
 if __name__ == "__main__":
